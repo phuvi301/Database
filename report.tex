@@ -243,8 +243,49 @@
 \pagebreak
 \section{Phân tích và mô tả yêu cầu dữ liệu}
 \subsection{Tìm hiểu ứng dụng/hệ thống}
+\subsubsection{Tên ứng dụng/hệ thống}
+\cach Để khảo sát và tham khảo cho việc xây dựng cơ sở dữ liệu ứng dụng đặt vé xem phim, nhóm lựa chọn hệ thống CGV Cinemas Việt Nam làm đối tượng nghiên cứu chính. CGV hiện là một trong những chuỗi rạp chiếu phim lớn tại Việt Nam, cung cấp ứng dụng di động (CGV Cinemas trên App Store và Google Play) cũng như website chính thức tại địa chỉ $\href{https://www.cgv.vn/.}{WebCGV}$ Ứng dụng cho phép người dùng dễ dàng tra cứu thông tin phim đang chiếu, xem trailer, lịch chiếu, chọn rạp, chọn suất chiếu và ghế ngồi trực tiếp trên giao diện. Sau khi đặt vé, khách hàng có thể thanh toán qua nhiều phương thức khác nhau (thẻ ngân hàng, ví điện tử, thẻ thành viên) và nhận vé điện tử dưới dạng mã QR để quét khi vào rạp. Ngoài ra, ứng dụng còn tích hợp hệ thống hội viên với tính năng tích điểm, đổi quà và sử dụng các ưu đãi, khuyến mãi đi kèm. Những chức năng này phản ánh luồng nghiệp vụ cốt lõi của một ứng dụng đặt vé hiện đại, bao gồm: quản lý phim, lịch chiếu, rạp chiếu, ghế ngồi, đơn đặt vé, thanh toán và ưu đãi khách hàng. Việc nghiên cứu CGV giúp định hình rõ các yêu cầu nghiệp vụ cần thiết cho hệ thống đặt vé, từ đó xây dựng mô hình dữ liệu phù hợp.
+\subsubsection{Phân tích nghiệp vụ}
+\cach Dựa trên khảo sát hệ thống CGV Cinemas, các chức năng chính của ứng dụng đặt vé xem phim có thể phân thành ba nhóm: chức năng cho khách hàng, chức năng cho quản trị rạp và các luồng nghiệp vụ cốt lõi.
+\\
+\\
+\cach \textbf{Chức năng dành cho khách hàng (user):} 
+\\
+\cach Ứng dụng cho phép người dùng xem danh sách phim đang chiếu với đầy đủ thông tin chi tiết như trailer, thể loại, thời lượng và giới hạn độ tuổi. Khách hàng có thể tìm kiếm rạp theo khu vực, chọn lịch chiếu theo ngày và định dạng (2D, 3D, IMAX...), sau đó lựa chọn ghế ngồi trực tiếp trên sơ đồ phòng chiếu. Khi đặt vé, người dùng có nhiều phương thức thanh toán như thẻ ngân hàng, ví điện tử hoặc thẻ hội viên và sau khi thanh toán thành công, vé điện tử sẽ được gửi kèm mã QR để quét tại rạp. Ngoài ra, hệ thống hỗ trợ quản lý tài khoản cá nhân, lưu lại lịch sử đặt vé, tích điểm hội viên và cho phép sử dụng các ưu đãi hoặc combo đồ ăn thức uống.
+\\
+\\
+\cach \textbf{Chức năng dành cho quản trị rạp (admin):}
+\\
+\cach Ứng dụng cung cấp công cụ cho nhân viên và quản lý rạp để điều hành hoạt động. Họ có thể thêm hoặc chỉnh sửa thông tin phim, tạo và sắp xếp lịch chiếu, phân bổ phòng chiếu và cập nhật sơ đồ ghế. Hệ thống cũng cho phép quản lý vé như xác thực mã QR, theo dõi tình trạng vé, xử lý hủy hoặc đổi vé khi có yêu cầu. Ngoài ra, quản trị có thể tạo và quản lý chương trình khuyến mãi, áp dụng mã giảm giá hoặc combo bán kèm. Chức năng báo cáo và thống kê giúp theo dõi doanh thu theo từng phim, suất chiếu hoặc rạp, đồng thời quản lý thông tin hội viên, bao gồm điểm thưởng, cấp bậc và quyền lợi đi kèm.
+\\
+\\
+\cach \textbf{Luồng nghiệp vụ cốt lõi:}
+\begin{enumerate}
+    \item Khách hàng mở ứng dụng $\rightarrow$ xem danh sách phim $\rightarrow$ chọn phim.
+    \item Chọn rạp $\rightarrow$ chọn ngày giờ $\rightarrow$ chọn ghế $\rightarrow$ chọn combo (nếu có).
+    \item Thực hiện thanh toán $\rightarrow$ nhận vé điện tử (QR code).
+    \item Đến rạp $\rightarrow$ quét QR code tại cổng $\rightarrow$ vào phòng chiếu.
+    \item Sau khi xem phim $\rightarrow$ hệ thống lưu lịch sử, cộng điểm hội viên.
+\end{enumerate}
+
 \subsection{Mô tả hệ thống đề xuất}
 \subsubsection{Mô tả người dùng và chức năng chính của hệ thống}
+\cach Ứng dụng đặt vé xem phim được thiết kế để phục vụ nhu cầu mua vé nhanh, chọn ghế trực quan và quản lý vận hành rạp hiệu quả. Hệ thống gồm các vai trò chính, mỗi vai trò có tập chức năng riêng phục vụ cả trải nghiệm khách hàng và nghiệp vụ rạp.
+\\
+\\
+\cach \textbf{Người dùng của hệ thống}
+\begin{itemize}
+	\item \textbf{Khách hàng (User, End-user)}: là người dùng cuối truy cập app/web để tra cứu phim, đặt vé và sử dụng dịch vụ tại rạp. Khách hàng có thể là người dùng chưa đăng ký (khách vãng lai) hoặc thành viên (có tài khoản, tích điểm, nhận ưu đãi). Nhu cầu chính: thông tin phim rõ ràng, tìm rạp nhanh, chọn ghế trực quan, thanh toán an toàn, nhận vé điện tử, theo dõi lịch sử và ưu đãi cá nhân.
+	\item \textbf{Nhân viên rạp (Staff / Box Office / Gate/Concession)}: là nhân viên trực tiếp vận hành tại rạp: bán vé tại quầy, xác thực vé QR ở cổng, xử lý đổi/hủy, quản lý tình trạng ghế và hỗ trợ khách. Họ cần giao diện đơn giản để check-in, huỷ/đổi vé, khóa ghế tạm thời, và truy xuất thông tin đơn hàng nhanh.
+	\item \textbf{Quản trị hệ thống (Admin / Manager)}:là người quản lý cấp cao của rạp hoặc chuỗi rạp, chịu trách nhiệm cấu hình hệ thống: thêm phim, lập lịch chiếu, điều chỉnh giá, tạo khuyến mãi, xem báo cáo doanh thu, quản lý tài khoản nhân viên và phân quyền. Họ cần công cụ báo cáo, audit log và cấu hình tích hợp (cổng thanh toán, POS).
+\end{itemize}
+\cach \textbf{Chức năng chính của hệ thống}
+\begin{itemize}
+	\item \textbf{Chức năng dành cho khách hàng:} Khách hàng có thể: đăng ký/đăng nhập và quản lý hồ sơ cá nhân; xem danh sách phim, xem chi tiết phim (tóm tắt, thời lượng, thể loại, độ tuổi), và xem trailer; tìm kiếm và lọc phim theo rạp/ngày/thể loại; chọn rạp và suất chiếu; chọn ghế trực quan trên sơ đồ phòng (hiển thị ghế trống/đã bán/không sử dụng); thêm combo đồ ăn/đồ uống vào đơn; áp dụng mã khuyến mãi hoặc sử dụng điểm thành viên khi đặt vé; thanh toán trực tuyến qua thẻ/QR/ví điện tử hoặc thanh toán tại quầy; nhận vé điện tử kèm mã QR và email/xác nhận; xem lịch sử đặt vé, in lại/e-ticket và yêu cầu đổi/hủy theo chính sách; nhận thông báo đẩy về khuyến mãi, thay đổi suất chiếu hoặc nhắc lịch; và đánh giá phim/để lại phản hồi. Mỗi chức năng phải rõ trạng thái (thành công/thất bại) và có thông báo lỗi dễ hiểu.
+	\item \textbf{Chức năng dành cho nhân viên rạp:} Nhân viên có thể: check-in khách bằng quét mã QR hoặc nhập mã thủ công; xác thực và huỷ mã QR; thực hiện bán vé trực tiếp tại quầy (tạo đơn, chọn ghế, in vé giấy); quản lý sơ đồ ghế trong ca (khóa/giải phóng ghế, đánh dấu ghế hỏng); xử lý yêu cầu đổi/hủy theo quy định (hoàn tiền, đổi suất); quản lý đơn hàng combo/kho hàng quầy; xem danh sách suất chiếu trong ca và số ghế còn trống; hỗ trợ in lại vé hoặc gửi lại vé điện tử cho khách; và báo cáo vấn đề kỹ thuật hoặc yêu cầu hỗ trợ lên admin. Giao diện dành cho nhân viên cần thao tác nhanh, ít bước, và có kiểm tra phân quyền.
+	\item \textbf{Chức năng dành cho quản trị hệ thống:} Admin thực hiện: quản lý phim (thêm, sửa, ngưng chiếu, upload poster/trailer), quản lý rạp và phòng chiếu (thêm rạp, cấu hình phòng, sơ đồ ghế, loại phòng), lập lịch chiếu và điều chỉnh suất (cập nhật giá, format, thời lượng); thiết lập chính sách giá (giá theo loại ghế, khung giờ, ưu đãi), tạo/quản lý chương trình khuyến mãi và mã giảm giá; quản lý người dùng và phân quyền (tạo tài khoản nhân viên, cấp/thu quyền); giám sát đơn hàng và quản lý tài chính (đối chiếu giao dịch, hoàn tiền, quản lý phiếu thu); báo cáo và phân tích (doanh thu theo rạp/phim/suất, tỉ lệ lấp ghế, báo cáo theo khoảng thời gian); cấu hình tích hợp (cổng thanh toán, hệ thống POS, email/SMS gateway); theo dõi nhật ký hoạt động (audit log), backup dữ liệu và cài đặt bảo mật; và quản lý hệ thống (cấu hình bản thử nghiệm, release, monitor). Tất cả hành động quản trị cần có cơ chế kiểm tra truy vết và phân tầng quyền để tránh thao tác trái phép.
+\end{itemize}
+
 \subsubsection{Mô tả các kiểu thực thể, các thuộc tính, mối liên kết}
 \subsection{Mô tả các ràng buộc ngữ nghĩa}
 \section{Thiết kế EERD}
