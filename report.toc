@@ -3,11 +3,13 @@
 \contentsline {section}{Danh sách hình ảnh}{4}{section*.9}%
 \contentsline {section}{Danh sách bảng biểu}{4}{section*.9}%
 \contentsline {section}{Danh sách thành viên và nhiệm vụ}{4}{section*.10}%
-\contentsline {section}{\numberline {1}Phân tích và mô tả yêu cầu dữ liệu}{5}{section.1}%
-\contentsline {subsection}{\numberline {1.1}Tìm hiểu ứng dụng/hệ thống}{5}{subsection.1.1}%
-\contentsline {subsection}{\numberline {1.2}Mô tả hệ thống đề xuất}{5}{subsection.1.2}%
-\contentsline {subsubsection}{\numberline {1.2.1}Mô tả người dùng và chức năng chính của hệ thống}{5}{subsubsection.1.2.1}%
-\contentsline {subsubsection}{\numberline {1.2.2}Mô tả các kiểu thực thể, các thuộc tính, mối liên kết}{5}{subsubsection.1.2.2}%
-\contentsline {subsection}{\numberline {1.3}Mô tả các ràng buộc ngữ nghĩa}{5}{subsection.1.3}%
-\contentsline {section}{\numberline {2}Thiết kế EERD}{5}{section.2}%
-\contentsline {section}{\numberline {3}Ánh xạ lược đồ EERD sang lược đồ CSDL}{5}{section.3}%
+\contentsline {section}{\numberline {1}Phân tích và mô tả yêu cầu dữ liệu}{6}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Tìm hiểu ứng dụng/hệ thống}{6}{subsection.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.1}Tên ứng dụng/hệ thống}{6}{subsubsection.1.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.2}Phân tích nghiệp vụ}{6}{subsubsection.1.1.2}%
+\contentsline {subsection}{\numberline {1.2}Mô tả hệ thống đề xuất}{7}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Mô tả người dùng và chức năng chính của hệ thống}{7}{subsubsection.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.2.2}Mô tả các kiểu thực thể, các thuộc tính, mối liên kết}{8}{subsubsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.3}Mô tả các ràng buộc ngữ nghĩa}{8}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Thiết kế EERD}{8}{section.2}%
+\contentsline {section}{\numberline {3}Ánh xạ lược đồ EERD sang lược đồ CSDL}{8}{section.3}%
