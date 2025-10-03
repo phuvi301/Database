@@ -246,6 +246,33 @@
 \subsection{Mô tả hệ thống đề xuất}
 \subsubsection{Mô tả người dùng và chức năng chính của hệ thống}
 \subsubsection{Mô tả các kiểu thực thể, các thuộc tính, mối liên kết}
+\cach Hệ thống cơ sở dữ liệu đặt vé xem phim quản lý các đối tượng sau: Người dùng (User), Phim (Movie), Rạp chiếu (Cinema), Phòng chiếu (Room), Suất chiếu (Showtime), Ghế (Seat), Đặt vé (Booking), Thanh toán (Payment), Khuyến mãi (Voucher), Nhân viên (Employee).
+
+Hệ thống đặt vé xem phim cho phép quản lý nhiều rạp cùng lúc. Mỗi rạp được gán mã định danh riêng (CinemaID) và lưu kèm theo tên (Name), địa chỉ (Address) và thành phố (City). Mỗi rạp được cấp một số hotline riêng (Hotline) cho phép khách hàng gọi đặt vé online.
+
+Mỗi rạp quản lý một số lượng phòng chiếu nhất định. Mỗi phòng chiếu được quản lý bằng mã phòng (RoomID) theo từng rạp chiếu. Mỗi phòng được đánh tên riêng (RoomName) và được chia thành nhiều loại phòng (RoomType) với các sức chứa khác nhau (Capacity).
+
+Vì sức chứa của mỗi phòng là khác nhau nên từng ghế trong phòng cũng được quản lý bằng mã riêng biệt (SeatID). Mỗi ghế chứa thông tin về hàng ghế (Row), số ghế (SeatNumber) và loại ghế cho khách hàng (SeatType) có nhiều sự lựa chọn đa dạng.
+
+Hệ thống cơ sở dữ liệu chứa thông tin của khách hàng/người dùng đặt vé. Mỗi người dùng có một mã số định danh riêng (UserID), họ và tên (FullName), địa chỉ email duy nhất (Email), mật khẩu tài khoản (Password) và số điện thoại (Phone). Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), giới tính (Gender) cũng như ngày tạo tài khoản (CreatedAt).
+
+Mỗi người dùng có thể đặt nhiều vé và áp dụng các khuyến mãi khác nhau. Mỗi vé được gán mã số riêng (BookingID) kèm theo mã định danh người đặt vé, suất chiếu phim đã đặt (ShowtimeID) và thời gian đã đặt (BookingTime). Đồng thời vé cũng bao gồm giá tiền (TotalPrice) và trạng thái thanh toán hiện tại (Status).
+
+Mỗi suất chiếu được quản lý bằng mã định danh riêng không trùng lặp (ShowtimeID). Suất chiếu chứa thông tin về phim được chiếu (MovieID), thời gian chiếu (StartTime và EndTime), thông tin phòng chiếu (RoomID) cũng như giá cơ bản cho một suất (BasePrice).
+
+Thông tin về các phim được chiếu cũng được hệ thống lưu trữ. Cụ thể, mỗi phim được đánh một mã số riêng để quản lý (MovieID), cũng như bao gồm tên phim (Title), thể loại (Genre), thời lượng chiếu (Duration), ngôn ngữ hỗ trợ (Language), độ tuổi giới hạn (AgeRating), mô tả cơ bản về nội dung phim (Description). Ngoài ra, mỗi phim còn lưu thêm thông tin về 
+các diễn viên trong phim (Actors), đạo diễn bộ phim (Director), ngày khởi chiếu (ReleaseDate) kèm theo poster (Poster) và trailer khởi chiếu (Trailer).
+
+Hệ thống cũng triển khai các chương trình khuyến mãi nhằm thu hút khách hàng. Mỗi chiến dịch khuyến mãi tung ra hàng ngàn voucher khuyến mãi khác nhau. Các voucher được quản lý bằng mã voucher riêng biệt (PromoID) kèm theo mã code nhận thưởng (Code). Mỗi voucher có kiểu khuyến mãi riêng (DiscountType) như giảm theo phần trăm 
+hay giảm theo số tiền cùng với giá trị được giảm của vé (DiscountValue), đồng thời cũng yêu cầu các điều kiện áp dụng khác nhau cho từng mã (Condition). Mỗi mã cũng cần có thời gian bắt đầu (StartDate) và kết thúc (EndDate) để đảm bảo mã không bị lạm dụng.
+
+Hệ thống đặt vé xem phim được vận hành bởi đội ngũ nhân viên chuyên nghiệp. Trong đó, mỗi nhân viên được cấp một mã số nhân viên riêng (StaffID), được phân bổ vị trí làm việc tại từng rạp riêng biệt (CinemaID). Hệ thống cũng cần lưu thông tin về tên nhân viên (Name), chức vụ (Role - Quản lý, thu ngân, soát vé, .v.v) và tài khoản (Username) và mật khẩu đăng nhập (Password) được hệ thống cấp trước.
+
+Hệ thống cho phép người dùng thanh toán bằng nhiều hình thức khác nhau và lưu trữ thông tin thanh toán. Mỗi thanh toán/hóa đơn có mã hóa đơn riêng (PaymentID) và thuộc về một vé duy nhất (BookingID). Mỗi thanh toán cũng kèm theo số tiền thanh toán (Amount), phương thức thanh toán (PaymentMethod) mà người dùng chọn. Trạng thái thanh toán (Status) cũng cần được lưu cho phép hệ thống kiểm tra giao dịch hoàn tất hay chưa. 
+Khi giao dịch hoàn tất, hệ thống cũng cần ghi nhận thời gian thực hiện giao dịch (PaymentTime), đảm bảo tính minh bạch cho hệ thống, nâng cao sự tín nhiệm với khách hàng.
+
+% Vinh lỏ
+
 \subsection{Mô tả các ràng buộc ngữ nghĩa}
 \section{Thiết kế EERD}
 \section{Ánh xạ lược đồ EERD sang lược đồ CSDL}
