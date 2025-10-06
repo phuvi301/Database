@@ -25,6 +25,7 @@
 \usepackage{bm}
 \usepackage{biblatex}
 \usepackage[colorlinks]{hyperref}
+\setlength{\parskip}{0.2cm}
 \newcommand{\cach}{\hspace*{1.5em}\ignorespaces}
 % \usepackage[acronym,toc]{glossaries}
 % \usepackage[symbols,nogroupskip,nonumberlist]{glossaries-extra}
@@ -246,17 +247,11 @@
 
 \cach Trong kỷ nguyên số hiện nay, dữ liệu được xem như là tài sản quý giá của mọi tổ chức và doanh nghiệp. Việc thu thập, quản lý và khai thác dữ liệu một cách hiệu quả đóng vai trò quan trọng trong quá trình vận hành, phát triển dịch vụ cũng như ra quyết định chiến lược. Cơ sở dữ liệu (CSDL) chính là nền tảng cốt lõi giúp đảm bảo cho các hệ thống thông tin hoạt động ổn định, chính xác và an toàn. Một cơ sở dữ liệu được thiết kế khoa học không chỉ hỗ trợ lưu trữ và xử lý khối lượng dữ liệu lớn mà còn giúp tối ưu hiệu suất, duy trì tính toàn vẹn và tạo điều kiện mở rộng hệ thống trong tương lai.  
 
-\vspace{0.2cm}
+Trong thực tế, nhiều lĩnh vực ứng dụng công nghệ thông tin đều cần đến các hệ thống cơ sở dữ liệu, điển hình như thương mại điện tử, ngân hàng, giáo dục, và đặc biệt là lĩnh vực giải trí. Một trong những dịch vụ giải trí phổ biến hiện nay là rạp chiếu phim, nơi nhu cầu đặt vé trực tuyến ngày càng gia tăng. Các ứng dụng đặt vé xem phim không chỉ giúp khách hàng dễ dàng lựa chọn phim, suất chiếu, vị trí ghế ngồi và thanh toán trực tuyến, mà còn hỗ trợ nhà quản lý rạp kiểm soát lịch chiếu, doanh thu, khuyến mãi cũng như tình trạng đặt vé theo thời gian thực. Tất cả những chức năng này đều được xây dựng và vận hành dựa trên một hệ thống cơ sở dữ liệu được thiết kế bài bản.  
 
-\indent Trong thực tế, nhiều lĩnh vực ứng dụng công nghệ thông tin đều cần đến các hệ thống cơ sở dữ liệu, điển hình như thương mại điện tử, ngân hàng, giáo dục, và đặc biệt là lĩnh vực giải trí. Một trong những dịch vụ giải trí phổ biến hiện nay là rạp chiếu phim, nơi nhu cầu đặt vé trực tuyến ngày càng gia tăng. Các ứng dụng đặt vé xem phim không chỉ giúp khách hàng dễ dàng lựa chọn phim, suất chiếu, vị trí ghế ngồi và thanh toán trực tuyến, mà còn hỗ trợ nhà quản lý rạp kiểm soát lịch chiếu, doanh thu, khuyến mãi cũng như tình trạng đặt vé theo thời gian thực. Tất cả những chức năng này đều được xây dựng và vận hành dựa trên một hệ thống cơ sở dữ liệu được thiết kế bài bản.  
+Trong khuôn khổ môn \textit{Hệ cơ sở dữ liệu} tại Trường Đại học Bách Khoa -- ĐHQG TP.HCM, nhóm chúng em thực hiện đề tài \textbf{``Xây dựng cơ sở dữ liệu cho hệ thống đặt vé xem phim''}. Mục tiêu của đề tài là phân tích yêu cầu nghiệp vụ của hệ thống, xây dựng sơ đồ EERD (Enhanced Entity-Relationship Diagram) để mô hình hóa các thực thể và mối quan hệ, sau đó tiến hành ánh xạ sang mô hình quan hệ để triển khai dưới dạng các bảng trong hệ quản trị cơ sở dữ liệu. Quá trình này không chỉ giúp nhóm củng cố và vận dụng các kiến thức lý thuyết đã học, mà còn rèn luyện kỹ năng phân tích, mô hình hóa và triển khai một cơ sở dữ liệu trong tình huống thực tế.  
 
-\vspace{0.2cm}
-
-\indent Trong khuôn khổ môn \textit{Hệ cơ sở dữ liệu} tại Trường Đại học Bách Khoa -- ĐHQG TP.HCM, nhóm chúng em thực hiện đề tài \textbf{``Xây dựng cơ sở dữ liệu cho hệ thống đặt vé xem phim''}. Mục tiêu của đề tài là phân tích yêu cầu nghiệp vụ của hệ thống, xây dựng sơ đồ EERD (Enhanced Entity-Relationship Diagram) để mô hình hóa các thực thể và mối quan hệ, sau đó tiến hành ánh xạ sang mô hình quan hệ để triển khai dưới dạng các bảng trong hệ quản trị cơ sở dữ liệu. Quá trình này không chỉ giúp nhóm củng cố và vận dụng các kiến thức lý thuyết đã học, mà còn rèn luyện kỹ năng phân tích, mô hình hóa và triển khai một cơ sở dữ liệu trong tình huống thực tế.  
-
-\vspace{0.2cm}
-
-\indent Thông qua báo cáo này, nhóm mong muốn trình bày một cách có hệ thống các bước thiết kế cơ sở dữ liệu cho một ứng dụng đặt vé xem phim, từ khâu phân tích đến triển khai. Đây sẽ là nền tảng quan trọng giúp sinh viên tiếp cận gần hơn với thực tiễn, đồng thời làm quen với các yêu cầu về chất lượng, tính chính xác và khả năng mở rộng của một hệ thống cơ sở dữ liệu trong bối cảnh công nghệ ngày nay.  
+Thông qua báo cáo này, nhóm mong muốn trình bày một cách có hệ thống các bước thiết kế cơ sở dữ liệu cho một ứng dụng đặt vé xem phim, từ khâu phân tích đến triển khai. Đây sẽ là nền tảng quan trọng giúp sinh viên tiếp cận gần hơn với thực tiễn, đồng thời làm quen với các yêu cầu về chất lượng, tính chính xác và khả năng mở rộng của một hệ thống cơ sở dữ liệu trong bối cảnh công nghệ ngày nay.  
 
 
 \pagebreak
@@ -265,7 +260,6 @@
 \subsubsection{Tên ứng dụng/hệ thống}
 \cach Để khảo sát và tham khảo cho việc xây dựng cơ sở dữ liệu ứng dụng đặt vé xem phim, nhóm lựa chọn hệ thống CGV Cinemas Việt Nam làm đối tượng nghiên cứu chính. CGV hiện là một trong những chuỗi rạp chiếu phim lớn tại Việt Nam, cung cấp ứng dụng di động (CGV Cinemas trên App Store và Google Play) cũng như website chính thức tại địa chỉ: $\href{https://www.cgv.vn/.}{CGV}$.
 
-\vspace{0.2cm}
 
 \indent Ứng dụng cho phép người dùng dễ dàng tra cứu thông tin phim đang chiếu, xem trailer, lịch chiếu, chọn rạp, chọn suất chiếu và ghế ngồi trực tiếp trên giao diện. Sau khi đặt vé, khách hàng có thể thanh toán qua nhiều phương thức khác nhau (thẻ ngân hàng, ví điện tử, thẻ thành viên) và nhận vé điện tử dưới dạng mã QR để quét khi vào rạp. Ngoài ra, ứng dụng còn tích hợp hệ thống hội viên với tính năng tích điểm, đổi quà và sử dụng các ưu đãi, khuyến mãi đi kèm. Những chức năng này phản ánh luồng nghiệp vụ cốt lõi của một ứng dụng đặt vé hiện đại, bao gồm: quản lý phim, lịch chiếu, rạp chiếu, ghế ngồi, đơn đặt vé, thanh toán và ưu đãi khách hàng. Việc nghiên cứu CGV giúp định hình rõ các yêu cầu nghiệp vụ cần thiết cho hệ thống đặt vé, từ đó xây dựng mô hình dữ liệu phù hợp.
 \subsubsection{Phân tích nghiệp vụ}
@@ -274,7 +268,6 @@
 \\
 \cach \textbf{Chức năng chính:}
 
-\vspace{0.2cm}
 
 \indent Đối với khách hàng, hệ thống cung cấp các tính năng như đăng ký/đăng nhập tài khoản, tìm kiếm phim, xem lịch chiếu, đặt vé trực tuyến, thanh toán, quản lý vé và theo dõi khuyến mãi. Với nhân viên, hệ thống hỗ trợ tra cứu thông tin suất chiếu, xác nhận và in vé, quản lý đặt chỗ tại quầy, cũng như hỗ trợ khách hàng trong quá trình sử dụng dịch vụ. Nhóm chức năng dành cho quản trị rạp bao gồm quản lý phim, suất chiếu, phòng chiếu, ghế ngồi, giá vé, chương trình khuyến mãi, cùng với việc thống kê doanh thu và theo dõi tình trạng hoạt động của rạp. Các nhóm chức năng này kết hợp với nhau tạo nên một hệ thống đồng bộ, đáp ứng đầy đủ nhu cầu từ người dùng cuối đến công tác vận hành và quản lý rạp chiếu phim.
 \\
