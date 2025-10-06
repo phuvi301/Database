@@ -335,6 +335,18 @@ Khi giao dịch hoàn tất, hệ thống cũng cần ghi nhận thời gian th�
 % Vinh lỏ
 
 \subsection{Mô tả các ràng buộc ngữ nghĩa}
+\begin{itemize}
+	\item Sức chứa (Capacity) của mỗi phòng chiếu (Room) phải lớn hơn 0.
+	\item Số ghế (SeatNumber) trong cùng phòng không được trùng nhau nếu cùng thuộc một hàng (Row).
+	\item Số điện thoại (Phone) của khách hàng phải là chuỗi có 10 chữ số.
+	\item Thời gian bắt đầu (StartTime) của suất chiếu (Showtime) phải sớm hơn thời gian kết thúc (EndTime) của nó.
+	\item Các suất chiếu trong cùng một phòng không được chồng lấn StartTime và EndTime.
+	\item Số tiền thanh toán (Amout) phải bằng hoặc nhỏ hơn tổng giá vé (TotalPrice).
+	\item Thời gian đặt vé (BookingTime) phải sớm hơn thời gian kết thúc (EndTime) của suất chiếu.
+	\item Thời gian bắt đầu (StartDate) của mã khuyến mãi (Voucher) phải sớm hơn thời gian kết thúc (EndDate) của nó.
+	\item Độ tuổi giới hạn (AgeRating) của mỗi bộ phim (Movie) không thể là số âm.
+	\item Mật khẩu đăng nhập (Password) của cả nhân viên (Employee) và người dùng (User) phải là chuỗi có ít nhất 8 kí tự, trong đó phải có ít nhất 1 kí tự chữ hoa, ít nhất 1 kí tự số, ít nhất 1 kí tự đặc biệt thuộc tập ($@$, $\mathdollar$, $\#$, $\%$, !, $\&$).
+\end{itemize}
 \section{Thiết kế EERD}
 \section{Ánh xạ lược đồ EERD sang lược đồ CSDL}
 
