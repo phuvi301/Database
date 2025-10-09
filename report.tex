@@ -300,32 +300,69 @@ Thông qua báo cáo này, nhóm mong muốn trình bày một cách có hệ th
 \end{itemize}
 
 \subsubsection{Mô tả các kiểu thực thể, các thuộc tính, mối liên kết}
-\cach Hệ thống cơ sở dữ liệu đặt vé xem phim quản lý các đối tượng sau: Người dùng (User), Phim (Movie), Rạp chiếu (Cinema), Phòng chiếu (Room), Suất chiếu (Showtime), Ghế (Seat), Đặt vé (Booking), Thanh toán (Payment), Khuyến mãi (Voucher), Nhân viên (Employee).
+\cach Hệ thống cơ sở dữ liệu đặt vé xem phim quản lý và lưu trữ các thông tin về Người dùng (User), Phim (Movie), Rạp chiếu (Cinema), Phòng chiếu (Room), Suất chiếu (Showtime), Ghế (Seat), Đặt vé (Booking), Thanh toán (Payment), Khuyến mãi (Voucher), Nhân viên (Employee) và các dịch vụ về đồ ăn và thức uống.
 
-Hệ thống đặt vé xem phim cho phép quản lý nhiều rạp cùng lúc. Mỗi rạp được gán mã định danh riêng (CinemaID) và lưu kèm theo tên (Name), địa chỉ (Address) và thành phố (City). Mỗi rạp được cấp một số hotline riêng (Hotline) cho phép khách hàng gọi đặt vé online.
+Hệ thống đặt vé xem phim cho phép quản lý nhiều rạp cùng lúc. 
+Mỗi rạp được gán mã định danh riêng (CinemaID) lưu kèm theo tên (Name) và địa chỉ (Address). 
+Mỗi rạp được cấp một số hotline riêng (Hotline) cho phép khách hàng gọi đặt vé online. 
 
-Mỗi rạp quản lý một số lượng phòng chiếu nhất định. Mỗi phòng chiếu được quản lý bằng mã phòng (RoomID) theo từng rạp chiếu. Mỗi phòng được đánh tên riêng (RoomName) và được chia thành nhiều loại phòng (RoomType) với các sức chứa khác nhau (Capacity).
+Mỗi rạp quản lý một số lượng phòng chiếu nhất định. 
+Mỗi phòng chiếu được quản lý bằng mã phòng (RoomID) riêng biệt giữa các rạp. 
+Mỗi phòng được đánh tên riêng (RoomName) và được chia thành nhiều loại phòng (RoomType) với các sức chứa khác nhau (Capacity).
 
-Vì sức chứa của mỗi phòng là khác nhau nên từng ghế trong phòng cũng được quản lý bằng mã riêng biệt (SeatID). Mỗi ghế chứa thông tin về hàng ghế (Row), số ghế (SeatNumber) và loại ghế cho khách hàng (SeatType) có nhiều sự lựa chọn đa dạng.
+Sức chứa của các phòng là khác nhau nên từng ghế trong mỗi phòng chiếu được quản lý bằng mã riêng biệt (SeatID) đảm bảo phân biệt các ghế trong cùng phòng. 
+Mỗi ghế gắn kèm thông tin về hạng ghế (SeatType) cho khách hàng có nhiều sự lựa chọn đa dạng.
 
-Hệ thống cơ sở dữ liệu chứa thông tin của khách hàng/người dùng đặt vé. Mỗi người dùng có một mã số định danh riêng (UserID), họ và tên (FullName), địa chỉ email duy nhất (Email), mật khẩu tài khoản (Password) và số điện thoại (Phone). Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), giới tính (Gender) cũng như ngày tạo tài khoản (CreatedAt).
+Hệ thống cơ sở dữ liệu quản lý và lưu trữ thông tin của khách hàng/người dùng đặt vé. 
+Mỗi người dùng được cấp một mã số định danh riêng (UserID) và yêu cầu thông tin về họ và tên (gồm phần tên (FirstName) và phần họ (LastName)), địa chỉ email duy nhất (Email), mật khẩu tài khoản (Password), số điện thoại (Phone) của người dùng. 
+Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), giới tính (Gender) cũng như ngày tạo tài khoản (CreatedAt) để đáp ứng các dịch vụ mở rộng của hệ thống.
 
-Mỗi người dùng có thể đặt nhiều vé và áp dụng các khuyến mãi khác nhau. Mỗi vé được gán mã số riêng (BookingID) kèm theo mã định danh người đặt vé, suất chiếu phim đã đặt (ShowtimeID) và thời gian đã đặt (BookingTime). Đồng thời vé cũng bao gồm giá tiền (TotalPrice) và trạng thái thanh toán hiện tại (Status).
+% Người dùng đã có thông tin có thể đặt vé xem phim trực tuyến kết hợp sử dụng các mã khuyến mãi tích lũy được từ hệ thống.
+% Mỗi vé được mua được quản lý bằng mã số riêng (BookingID) đồng thời bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID) và thời gian đã đặt (BookingTime). 
+% Đồng thời vé cũng bao gồm giá tiền (TotalPrice) và trạng thái thanh toán hiện tại (Status). Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
-Mỗi suất chiếu được quản lý bằng mã định danh riêng không trùng lặp (ShowtimeID). Suất chiếu chứa thông tin về phim được chiếu (MovieID), thời gian chiếu (StartTime và EndTime), thông tin phòng chiếu (RoomID) cũng như giá cơ bản cho một suất (BasePrice).
+Người dùng đã có thông tin có thể đặt vé xem phim trực tuyến kết hợp sử dụng các mã khuyến mãi tích lũy được từ hệ thống.
+Mỗi vé được quản lý bằng mã số riêng (BookingID) và ghi nhận thời gian đặt (BookingTIme). Một đơn vé bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID), thông tin về vị trí ghế đã chọn (SeatID). 
+Tổng giá tiền (TotalPrice) của đơn vé sẽ được tính toán dựa trên các thông tin của vé sau khi đã áp dụng các mã khuyến mãi từ người dùng. 
+Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
-Thông tin về các phim được chiếu cũng được hệ thống lưu trữ. Cụ thể, mỗi phim được đánh một mã số riêng để quản lý (MovieID), cũng như bao gồm tên phim (Title), thể loại (Genre), thời lượng chiếu (Duration), ngôn ngữ hỗ trợ (Language), độ tuổi giới hạn (AgeRating), mô tả cơ bản về nội dung phim (Description). Ngoài ra, mỗi phim còn lưu thêm thông tin về 
-các diễn viên trong phim (Actors), đạo diễn bộ phim (Director), ngày khởi chiếu (ReleaseDate) kèm theo poster (Poster) và trailer khởi chiếu (Trailer).
+Mỗi suất chiếu được quản lý bằng mã định danh riêng không trùng lặp (ShowtimeID). 
+Suất chiếu chứa thông tin về thời gian chiếu (StartTime và EndTime) cũng như giá cơ bản cho một suất (BasePrice). 
+Mỗi bộ phim có thể có nhiều suất chiếu khác nhau trong ngày và mỗi suất chiếu được quy định một phòng chiếu cụ thể.
 
-Hệ thống cũng triển khai các chương trình khuyến mãi nhằm thu hút khách hàng. Mỗi chiến dịch khuyến mãi tung ra hàng ngàn voucher khuyến mãi khác nhau. Các voucher được quản lý bằng mã voucher riêng biệt (PromoID) kèm theo mã code nhận thưởng (Code). Mỗi voucher có kiểu khuyến mãi riêng (DiscountType) như giảm theo phần trăm 
-hay giảm theo số tiền cùng với giá trị được giảm của vé (DiscountValue), đồng thời cũng yêu cầu các điều kiện áp dụng khác nhau cho từng mã (Condition). Mỗi mã cũng cần có thời gian bắt đầu (StartDate) và kết thúc (EndDate) để đảm bảo mã không bị lạm dụng.
+Thông tin về các phim được chiếu được hệ thống lưu trữ chi tiết. 
+Cụ thể, mỗi phim được đánh một mã số riêng để quản lý (MovieID), cũng như bao gồm tên phim (Title), thể loại (Genre), thời lượng chiếu (Duration), ngôn ngữ hỗ trợ (Language), độ tuổi giới hạn (AgeRating), mô tả cơ bản về nội dung phim (Description). 
+Ngoài ra, mỗi phim còn lưu thêm thông tin về các diễn viên trong phim (Actors), đạo diễn bộ phim (Director), ngày khởi chiếu (ReleaseDate) kèm theo poster (Poster) và trailer khởi chiếu (Trailer). 
+Mỗi bộ phim có thể là phần trước hoặc phần sau của một series phim nào đó. 
 
-Hệ thống đặt vé xem phim được vận hành bởi đội ngũ nhân viên chuyên nghiệp. Trong đó, mỗi nhân viên được cấp một mã số nhân viên riêng (StaffID), được phân bổ vị trí làm việc tại từng rạp riêng biệt (CinemaID). Hệ thống cũng cần lưu thông tin về tên nhân viên (Name), chức vụ (Role - Quản lý, thu ngân, soát vé, .v.v) và tài khoản (Username) và mật khẩu đăng nhập (Password) được hệ thống cấp trước.
+Hệ thống cũng triển khai các chương trình khuyến mãi nhằm thu hút khách hàng. 
+Mỗi chiến dịch khuyến mãi tung ra hàng ngàn voucher khuyến mãi khác nhau. 
+Các voucher được quản lý bằng mã voucher nhận thưởng (Promo Code). 
+Mỗi voucher có kiểu khuyến mãi riêng (DiscountType) như giảm theo phần trăm hay giảm theo số tiền cùng với giá trị được giảm của vé (DiscountValue), đồng thời cũng yêu cầu các điều kiện áp dụng khác nhau cho từng mã (Condition). 
+Mỗi đơn vé được đặt có thể áp dụng nhiều mã khuyến mãi khác nhau (nếu có) để giảm giá vé, đồng thời mỗi mã có thể được sử dụng nhiều lần bởi cho nhiều vé khác nhau. 
+Mỗi mã cũng cần có thời gian bắt đầu (StartDate) và kết thúc (EndDate) để đảm bảo mã không bị lạm dụng.
 
-Hệ thống cho phép người dùng thanh toán bằng nhiều hình thức khác nhau và lưu trữ thông tin thanh toán. Mỗi thanh toán/hóa đơn có mã hóa đơn riêng (PaymentID) và thuộc về một vé duy nhất (BookingID). Mỗi thanh toán cũng kèm theo số tiền thanh toán (Amount), phương thức thanh toán (PaymentMethod) mà người dùng chọn. Trạng thái thanh toán (Status) cũng cần được lưu cho phép hệ thống kiểm tra giao dịch hoàn tất hay chưa. 
+Hệ thống cung cấp các dịch vụ đồ ăn thức uống đi kèm nhằm nâng cao trải nghiệm khách hàng. 
+Mỗi món ăn thức uống được quản lý bằng mã riêng (FB ID) và bao gồm tên món (FBName), và giá tiền (Price) cho từng món.
+Mỗi món ăn thức uống có thể được đặt kèm trong mỗi đơn vé (nếu có) và mỗi đơn vé có thể đặt nhiều món khác nhau bao gồm chỉ số quản lý số lượng món đã đặt (Num of Items). 
+
+Hệ thống đặt vé xem phim được vận hành bởi đội ngũ nhân viên chuyên nghiệp. 
+Trong đó, mọi nhân viên được cấp một mã số nhân viên riêng (EmployeeID), được phân bổ vị trí làm việc tại từng rạp riêng biệt (CinemaID). 
+Hệ thống có thể kiểm soát được số lượng nhân viên (Num of Employee) đang làm việc tại mỗi rạp.
+Hệ thống cũng cần lưu thông tin về tên nhân viên (Name), ca làm việc (Shift) và lương thưởng (Salary) của từng nhân viên. 
+Nhân viên được chia thành hai loại chính là quản lý (Manager) và nhân viên (Staff). 
+Với nhân viên, hệ thống lưu trữ về vị trí làm việc (Position) để phân biệt các vai trò khác nhau trong rạp.
+Với quản lý, hệ thống lưu trữ số lượng các nhân viên (EmployeeID) mà họ quản lý trực tiếp. 
+
+Hệ thống cho phép người dùng thanh toán bằng nhiều hình thức khác nhau và lưu trữ thông tin thanh toán. 
+Mỗi thanh toán/hóa đơn có mã hóa đơn riêng (PaymentID) và thuộc về một vé duy nhất (BookingID). 
+Mỗi thanh toán có thể là giao dịch qua thẻ tín dụng, ví điện tử hay trực tiếp bằng tiền mặt. 
+Đối với các thanh toán trực tuyến bằng, hệ thống lưu trữ thông tin về mã giao dịch (PaymentCode) do bên thứ ba cung cấp và thông tin về số tài khoản (Card Number) và ngân hàng xử lý giao dịch (Bank Name). 
+Đối với các thành toán trực tiếp tại quầy, hệ thống lưu trữ thông tin về tên nhân viên thu ngân (StaffName). 
+Trạng thái thanh toán (Status) cũng cần được lưu cho phép hệ thống kiểm tra giao dịch hoàn tất hay chưa. 
 Khi giao dịch hoàn tất, hệ thống cũng cần ghi nhận thời gian thực hiện giao dịch (PaymentTime), đảm bảo tính minh bạch cho hệ thống, nâng cao sự tín nhiệm với khách hàng.
 
-% Vinh lỏ
+% Vinh lỏ vẫn lỏ
 
 \subsection{Mô tả các ràng buộc ngữ nghĩa}
 \begin{itemize}
