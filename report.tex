@@ -300,7 +300,7 @@ Thông qua báo cáo này, nhóm mong muốn trình bày một cách có hệ th
 \end{itemize}
 
 \subsubsection{Mô tả các kiểu thực thể, các thuộc tính, mối liên kết}
-\cach Hệ thống cơ sở dữ liệu đặt vé xem phim quản lý và lưu trữ các thông tin về Người dùng (User), Phim (Movie), Rạp chiếu (Cinema), Phòng chiếu (Room), Suất chiếu (Showtime), Ghế (Seat), Đặt vé (Booking), Thanh toán (Payment), Khuyến mãi (Voucher), Nhân viên (Employee) và các dịch vụ về đồ ăn và thức uống.
+\cach Hệ thống cơ sở dữ liệu đặt vé xem phim quản lý và lưu trữ các thông tin về Người dùng (User), Phim (Movie), Rạp chiếu (Cinema), Phòng chiếu (Room), Suất chiếu (Showtime), Ghế (Seat), Đặt vé (Booking), Thanh toán (Payment), Khuyến mãi (Voucher), Nhân viên (Employee) và các dịch vụ về đồ ăn và thức uống (Food\&Beverage).
 
 Hệ thống đặt vé xem phim cho phép quản lý nhiều rạp cùng lúc. 
 Mỗi rạp được gán mã định danh riêng (CinemaID) lưu kèm theo tên (Name) và địa chỉ (Address). 
@@ -315,14 +315,14 @@ Mỗi ghế gắn kèm thông tin về hạng ghế (SeatType) cho khách hàng 
 
 Hệ thống cơ sở dữ liệu quản lý và lưu trữ thông tin của khách hàng/người dùng đặt vé. 
 Mỗi người dùng được cấp một mã số định danh riêng (UserID) và yêu cầu thông tin về họ và tên (gồm phần tên (FirstName) và phần họ (LastName)), địa chỉ email duy nhất (Email), mật khẩu tài khoản (Password), số điện thoại (Phone) của người dùng. 
-Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), giới tính (Gender) cũng như ngày tạo tài khoản (CreatedAt) để đáp ứng các dịch vụ mở rộng của hệ thống.
+Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), giới tính (Gender) cũng như ngày tạo tài khoản (CreateAt) để đáp ứng các dịch vụ mở rộng của hệ thống.
 
 % Người dùng đã có thông tin có thể đặt vé xem phim trực tuyến kết hợp sử dụng các mã khuyến mãi tích lũy được từ hệ thống.
 % Mỗi vé được mua được quản lý bằng mã số riêng (BookingID) đồng thời bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID) và thời gian đã đặt (BookingTime). 
 % Đồng thời vé cũng bao gồm giá tiền (TotalPrice) và trạng thái thanh toán hiện tại (Status). Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
 Người dùng đã có thông tin có thể đặt vé xem phim trực tuyến kết hợp sử dụng các mã khuyến mãi tích lũy được từ hệ thống.
-Mỗi vé được quản lý bằng mã số riêng (BookingID) và ghi nhận thời gian đặt (BookingTIme). Một đơn vé bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID), thông tin về vị trí ghế đã chọn (SeatID). 
+Mỗi vé được quản lý bằng mã số riêng (BookingID) và ghi nhận thời gian đặt (BookingTime). Một đơn vé bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID), thông tin về vị trí ghế đã chọn (SeatID). 
 Tổng giá tiền (TotalPrice) của đơn vé sẽ được tính toán dựa trên các thông tin của vé sau khi đã áp dụng các mã khuyến mãi từ người dùng. 
 Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
