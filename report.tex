@@ -117,13 +117,6 @@
 % ACRONYMS & SYMBOLS
 % {
 % \makeglossaries
-\setabbreviationstyle{long-short}
-\newabbreviation{csp}{CSP}{Cutting Stock Problem}
-\newabbreviation{ffd}{FFD}{First Fit Decreasing}
-\newabbreviation{ga}{GA}{Genetic Algorithm}
-\newabbreviation{lp}{LP}{Linear Programming}
-% \glsnoexpandfields
-\glsxtrnewsymbol[description = {Tập hợp số tự nhiên}]{natural}{\ensuremath{\mathbb{N}}}
 
 % }
 %
@@ -190,8 +183,8 @@
 
 % Glossaries
 % {}
-\printunsrtglossary[type={symbols}, title={Danh sách kí hiệu}]
-\printunsrtglossary[type={abbreviations}, title={Danh sách từ viết tắt}]
+% \printunsrtglossary[type={symbols}, title={Danh sách kí hiệu}]
+% \printunsrtglossary[type={abbreviations}, title={Danh sách từ viết tắt}]
 \pagebreak
 \listoffigures
 \listoftables
@@ -310,7 +303,7 @@ Mỗi rạp quản lý một số lượng phòng chiếu nhất định.
 Mỗi phòng chiếu được quản lý bằng mã phòng (RoomID) riêng biệt giữa các rạp. 
 Mỗi phòng được đánh tên riêng (RoomName) và được chia thành nhiều loại phòng (RoomType) với các sức chứa khác nhau (Capacity).
 
-Sức chứa của các phòng là khác nhau nên từng ghế trong mỗi phòng chiếu được quản lý bằng mã riêng biệt (SeatID) đảm bảo phân biệt các ghế trong cùng phòng. 
+Sức chứa của các phòng là khác nhau nên từng ghế trong mỗi phòng chiếu được quản lý bằng mã riêng biệt (SeatInfo) đảm bảo phân biệt các ghế trong cùng phòng. 
 Mỗi ghế gắn kèm thông tin về hạng ghế (SeatType) cho khách hàng có nhiều sự lựa chọn đa dạng.
 
 Hệ thống cơ sở dữ liệu quản lý và lưu trữ thông tin của khách hàng/người dùng đặt vé. 
@@ -322,7 +315,7 @@ Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), 
 % Đồng thời vé cũng bao gồm giá tiền (TotalPrice) và trạng thái thanh toán hiện tại (Status). Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
 Người dùng đã có thông tin có thể đặt vé xem phim trực tuyến kết hợp sử dụng các mã khuyến mãi tích lũy được từ hệ thống.
-Mỗi vé được quản lý bằng mã số riêng (BookingID) và ghi nhận thời gian đặt (BookingTIme). Một đơn vé bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID), thông tin về vị trí ghế đã chọn (SeatID). 
+Mỗi vé được quản lý bằng mã số riêng (BookingID) và ghi nhận thời gian đặt (BookingTime). Một đơn vé bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID), thông tin về vị trí ghế đã chọn (SeatID). 
 Tổng giá tiền (TotalPrice) của đơn vé sẽ được tính toán dựa trên các thông tin của vé sau khi đã áp dụng các mã khuyến mãi từ người dùng. 
 Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
@@ -343,7 +336,7 @@ Mỗi đơn vé được đặt có thể áp dụng nhiều mã khuyến mãi k
 Mỗi mã cũng cần có thời gian bắt đầu (StartDate) và kết thúc (EndDate) để đảm bảo mã không bị lạm dụng.
 
 Hệ thống cung cấp các dịch vụ đồ ăn thức uống đi kèm nhằm nâng cao trải nghiệm khách hàng. 
-Mỗi món ăn thức uống được quản lý bằng mã riêng (FB ID) và bao gồm tên món (FBName), và giá tiền (Price) cho từng món.
+Mỗi món ăn thức uống được quản lý bằng mã riêng (FB ID) và bao gồm tên món (FBName), giá tiền (Price) và số lượng mua (Quantity) cho từng món.
 Mỗi món ăn thức uống có thể được đặt kèm trong mỗi đơn vé (nếu có) và mỗi đơn vé có thể đặt nhiều món khác nhau bao gồm chỉ số quản lý số lượng món đã đặt (Num of Items). 
 
 Hệ thống đặt vé xem phim được vận hành bởi đội ngũ nhân viên chuyên nghiệp. 
@@ -352,12 +345,12 @@ Hệ thống có thể kiểm soát được số lượng nhân viên (Num of E
 Hệ thống cũng cần lưu thông tin về tên nhân viên (Name), ca làm việc (Shift) và lương thưởng (Salary) của từng nhân viên. 
 Nhân viên được chia thành hai loại chính là quản lý (Manager) và nhân viên (Staff). 
 Với nhân viên, hệ thống lưu trữ về vị trí làm việc (Position) để phân biệt các vai trò khác nhau trong rạp.
-Với quản lý, hệ thống lưu trữ số lượng các nhân viên (EmployeeID) mà họ quản lý trực tiếp. 
+Với quản lý, hệ thống lưu trữ số lượng các nhân viên (Num of staff) mà họ quản lý trực tiếp. 
 
 Các bộ phim được chiếu tại rạp được kiểm soát bởi quản lý rạp. Mỗi bộ phim được quản lý trực tiếp bởi quản lý hoặc được hệ thống xử lý không can thiệp. Do sức mạnh hệ thống xử lý tự động còn hạn chế, quản lý đôi khi phải đảm nhận nhiều bộ phim. 
 Trong quá trình quản lý bộ phim, hệ thống cần lưu thông tin cho biết hành động của quản lý rạp với bộ phim (ActionType) đó bao gồm thêm, sửa, dừng chiếu hay các cập nhật khác, đồng thời ghi nhận thời gian thực hiện hành động (ActionDate).
 Tương tự với bộ phim, mỗi suất chiếu trong rạp cũng phải được quản lý bởi một nhân viên quản lý trong khi mỗi quản lý có thể quản lý nhiều suất chiếu khác nhau. 
-Suất chiếu được tạo ra và kiểm duyệt dựa trên các thông tin mà quản lý rạp cung cấp bao gồm lịch dự kiến (Schedule Date), thời lượng dự kiến (Duration Adjust), hình thức suất chiếu (Format) và giá vé cơ bản (BasePrice).
+Suất chiếu được tạo ra và kiểm duyệt dựa trên các thông tin mà quản lý rạp cung cấp bao gồm lịch dự kiến (Schedule Date), thời lượng dự kiến (Duration Adjust), hình thức suất chiếu (Format) và giá vé điều chỉnh (PriceAdjust).
 Quản lý rạp cũng chịu trách nhiệm quản lý các phòng chiếu trong rạp. Mỗi phòng chiếu được quản lý bởi một quản lý và mỗi quản lý có thể quản lý nhiều phòng chiếu khác nhau. 
 Hệ thống cần lưu thông tin trong quá trình quản lý các phòng chiếu cho biết hành động của quản lý với phòng chiếu (ActionType) đó bao gồm quản lý cấu trúc phòng, loại phòng và sơ đồ bố trí ghế, đồng thời ghi nhận thời gian thực hiện hành động (ActionDate).
 
@@ -375,23 +368,33 @@ Hệ thống cần lưu thông tin về loại yêu cầu (RequestType) gồm đ
 Hệ thống cho phép người dùng thanh toán bằng nhiều hình thức khác nhau và lưu trữ thông tin thanh toán. 
 Mỗi thanh toán/hóa đơn có mã hóa đơn riêng (PaymentID) và thuộc về một vé duy nhất (BookingID). 
 Mỗi thanh toán có thể là giao dịch qua thẻ tín dụng, ví điện tử hay trực tiếp bằng tiền mặt. 
-Đối với các thanh toán trực tuyến bằng, hệ thống lưu trữ thông tin về mã giao dịch (PaymentCode) do bên thứ ba cung cấp và thông tin về số tài khoản (Card Number) và ngân hàng xử lý giao dịch (Bank Name). 
-Đối với các thành toán trực tiếp tại quầy, hệ thống lưu trữ thông tin về tên nhân viên thu ngân (StaffName). 
+Đối với các thanh toán trực tuyến, hệ thống lưu trữ thông tin về mã giao dịch (PaymentCode) do bên thứ ba cung cấp và thông tin về số tài khoản (Card Number) và ngân hàng xử lý giao dịch (Bank Name). 
+Đối với các thanh toán trực tiếp tại quầy, hệ thống lưu trữ thông tin về tên nhân viên thu ngân (StaffName). 
 Trạng thái thanh toán (Status) cũng cần được lưu cho phép hệ thống kiểm tra giao dịch hoàn tất hay chưa. 
 Khi giao dịch hoàn tất, hệ thống cũng cần ghi nhận thời gian thực hiện giao dịch (PaymentTime), đảm bảo tính minh bạch cho hệ thống, nâng cao sự tín nhiệm với khách hàng.
 
 \subsection{Mô tả các ràng buộc ngữ nghĩa}
 \begin{itemize}
-	\item Sức chứa (Capacity) của mỗi phòng chiếu (Room) phải lớn hơn 0.
-	\item Số ghế (SeatNumber) trong cùng phòng không được trùng nhau nếu cùng thuộc một hàng (Row).
-	\item Số điện thoại (Phone) của khách hàng phải là chuỗi có 10 chữ số.
-	\item Thời gian bắt đầu (StartTime) của suất chiếu (Showtime) phải sớm hơn thời gian kết thúc (EndTime) của nó.
-	\item Các suất chiếu trong cùng một phòng không được chồng lấn StartTime và EndTime.
-	\item Số tiền thanh toán (Amout) phải bằng hoặc nhỏ hơn tổng giá vé (TotalPrice).
-	\item Thời gian đặt vé (BookingTime) phải sớm hơn thời gian kết thúc (EndTime) của suất chiếu.
-	\item Thời gian bắt đầu (StartDate) của mã khuyến mãi (Voucher) phải sớm hơn thời gian kết thúc (EndDate) của nó.
-	\item Độ tuổi giới hạn (AgeRating) của mỗi bộ phim (Movie) không thể là số âm.
-	\item Mật khẩu đăng nhập (Password) của cả nhân viên (Employee) và người dùng (User) phải là chuỗi có ít nhất 8 kí tự, trong đó phải có ít nhất 1 kí tự chữ hoa, ít nhất 1 kí tự số, ít nhất 1 kí tự đặc biệt thuộc tập ($@$, $\mathdollar$, $\#$, $\%$, !, $\&$).
+\item Sức chứa (Capacity) của mỗi phòng chiếu (Room) phải có giá trị dương.
+	\item Thời lượng chiếu (Duration) của mỗi bộ phim (Movie) phải có giá trị dương.
+	\item Thời gian bắt đầu chiếu (StartTime) của mỗi suất chiếu (Showtime) phải sớm hơn thời gian kết thúc của nó (EndTime).
+	\item Ngày công chiếu (ReleaseDate) của mỗi bộ phim (Movie) phải sớm hơn ngày khởi chiếu (Showtime.StartTime).
+	\item Giá cơ bản của mỗi suất (BasePrice) phải có giá trị dương.
+	\item Hai suất chiếu (Showtime) cùng một phòng chiếu (Room) không được trùng lắp nhau.
+	\item Mật khẩu đăng nhập (Password) của người dùng (User) phải là chuỗi có ít nhất 8 kí tự, trong đó phải có ít nhất 1 kí tự chữ hoa, ít nhất 1 kí tự số, ít nhất 1 kí tự đặc biệt thuộc tập {$@$, $\mathdollar$, $\#$, $\%$, !, $\&$}.
+	\item Ngày sinh (Birthday) của người dùng (User) phải sớm hơn ngày hiện tại.
+	\item Số điện thoại (Phone) của người dùng (User) phải là chuỗi có 10 chữ số.
+	\item Thời gian đặt vé (BookingTime) phải sớm hơn thời gian bắt đầu của suất chiếu (Showtime.StartTime).
+	\item Số lượng nhân viên (Num of Employee) đang làm việc tại mỗi rạp được tính bằng tổng số nhân viên có EmployeeID tương ứng trong bảng Employee.
+	\item Giới tính (Gender) của người dùng (User) phải thuộc tập {"Male", "Female"}.
+	\item Giá tiền (Price) của mỗi món ăn thức uống phải có giá trị dương.
+	\item Số lượng món đã đặt (Num of Items) được tính bằng tổng số lượng món (Quantity) ứng với các sản phẩm được đặt trong bảng F\&B.
+	\item Hạng ghế (SeatType) phải thuộc tập {"Standard", "VIP", "Couple", "Deluxe"}.
+	\item Thời gian bắt đầu (Discount.StartDate) của mỗi voucher khuyến mãi phải sớm hơn (Discount.EndDate).
+	\item Ca làm việc (Shift) của nhân viên (Employee) thuộc tập {"Morning", "Afternoon", "Evening"}.
+	\item Lương thưởng (Salary) của nhân viên (Employee) phải có giá trị dương.
+	\item TotalPrice = tổng các Showtime.BasePrice + tổng các F\&B.Price - Voucher.DiscountValue.
+	\item Thời gian thực hiện giao dịch (PaymentTime) phải trễ hơn thời gian đặt (BookingTime).
 \end{itemize}
 \pagebreak
 \section{Thiết kế EERD}
@@ -405,4 +408,7 @@ Khi giao dịch hoàn tất, hệ thống cũng cần ghi nhận thời gian th�
 	\includegraphics[width=1.2\textwidth]{Images/mapping.png}
 	\caption{Ánh xạ lược đồ EERD sang lược đồ CSDL}
 \end{figure}
+\pagebreak
+\section{Đường dẫn truy cập các sơ đồ}
+\cach Đường dẫn truy cập các sơ đồ như sau: $\href{https://drive.google.com/drive/folders/1Zwp_fdw1I9jSBugBzoHM8gc0wFd-WgGM?usp=sharing}{Link}$
 \end{document}
