@@ -300,7 +300,7 @@ Thông qua báo cáo này, nhóm mong muốn trình bày một cách có hệ th
 \end{itemize}
 
 \subsubsection{Mô tả các kiểu thực thể, các thuộc tính, mối liên kết}
-\cach Hệ thống cơ sở dữ liệu đặt vé xem phim quản lý và lưu trữ các thông tin về Người dùng (User), Phim (Movie), Rạp chiếu (Cinema), Phòng chiếu (Room), Suất chiếu (Showtime), Ghế (Seat), Đặt vé (Booking), Thanh toán (Payment), Khuyến mãi (Voucher), Nhân viên (Employee) và các dịch vụ về đồ ăn và thức uống (Food\&Beverage).
+\cach Hệ thống cơ sở dữ liệu đặt vé xem phim quản lý và lưu trữ các thông tin về Người dùng (User), Phim (Movie), Rạp chiếu (Cinema), Phòng chiếu (Room), Suất chiếu (Showtime), Ghế (Seat), Đặt vé (Booking), Thanh toán (Payment), Khuyến mãi (Voucher), Nhân viên (Employee) và các dịch vụ về đồ ăn và thức uống.
 
 Hệ thống đặt vé xem phim cho phép quản lý nhiều rạp cùng lúc. 
 Mỗi rạp được gán mã định danh riêng (CinemaID) lưu kèm theo tên (Name) và địa chỉ (Address). 
@@ -315,14 +315,14 @@ Mỗi ghế gắn kèm thông tin về hạng ghế (SeatType) cho khách hàng 
 
 Hệ thống cơ sở dữ liệu quản lý và lưu trữ thông tin của khách hàng/người dùng đặt vé. 
 Mỗi người dùng được cấp một mã số định danh riêng (UserID) và yêu cầu thông tin về họ và tên (gồm phần tên (FirstName) và phần họ (LastName)), địa chỉ email duy nhất (Email), mật khẩu tài khoản (Password), số điện thoại (Phone) của người dùng. 
-Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), giới tính (Gender) cũng như ngày tạo tài khoản (CreateAt) để đáp ứng các dịch vụ mở rộng của hệ thống.
+Ngoài ra, hệ thống cũng lưu trữ thông tin về ngày sinh (Birthday), giới tính (Gender) cũng như ngày tạo tài khoản (CreatedAt) để đáp ứng các dịch vụ mở rộng của hệ thống.
 
 % Người dùng đã có thông tin có thể đặt vé xem phim trực tuyến kết hợp sử dụng các mã khuyến mãi tích lũy được từ hệ thống.
 % Mỗi vé được mua được quản lý bằng mã số riêng (BookingID) đồng thời bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID) và thời gian đã đặt (BookingTime). 
 % Đồng thời vé cũng bao gồm giá tiền (TotalPrice) và trạng thái thanh toán hiện tại (Status). Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
 Người dùng đã có thông tin có thể đặt vé xem phim trực tuyến kết hợp sử dụng các mã khuyến mãi tích lũy được từ hệ thống.
-Mỗi vé được quản lý bằng mã số riêng (BookingID) và ghi nhận thời gian đặt (BookingTime). Một đơn vé bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID), thông tin về vị trí ghế đã chọn (SeatID). 
+Mỗi vé được quản lý bằng mã số riêng (BookingID) và ghi nhận thời gian đặt (BookingTIme). Một đơn vé bao gồm thông tin về suất chiếu phim đã đặt (ShowtimeID), thông tin về vị trí ghế đã chọn (SeatID). 
 Tổng giá tiền (TotalPrice) của đơn vé sẽ được tính toán dựa trên các thông tin của vé sau khi đã áp dụng các mã khuyến mãi từ người dùng. 
 Tất nhiên, mỗi người dùng có thể đặt bao nhiêu vé tùy ý.
 
@@ -354,6 +354,24 @@ Nhân viên được chia thành hai loại chính là quản lý (Manager) và 
 Với nhân viên, hệ thống lưu trữ về vị trí làm việc (Position) để phân biệt các vai trò khác nhau trong rạp.
 Với quản lý, hệ thống lưu trữ số lượng các nhân viên (EmployeeID) mà họ quản lý trực tiếp. 
 
+Các bộ phim được chiếu tại rạp được kiểm soát bởi quản lý rạp. Mỗi bộ phim được quản lý trực tiếp bởi quản lý hoặc được hệ thống xử lý không can thiệp. Do sức mạnh hệ thống xử lý tự động còn hạn chế, quản lý đôi khi phải đảm nhận nhiều bộ phim. 
+Trong quá trình quản lý bộ phim, hệ thống cần lưu thông tin cho biết hành động của quản lý rạp với bộ phim (ActionType) đó bao gồm thêm, sửa, dừng chiếu hay các cập nhật khác, đồng thời ghi nhận thời gian thực hiện hành động (ActionDate).
+Tương tự với bộ phim, mỗi suất chiếu trong rạp cũng phải được quản lý bởi một nhân viên quản lý trong khi mỗi quản lý có thể quản lý nhiều suất chiếu khác nhau. 
+Suất chiếu được tạo ra và kiểm duyệt dựa trên các thông tin mà quản lý rạp cung cấp bao gồm lịch dự kiến (Schedule Date), thời lượng dự kiến (Duration Adjust), hình thức suất chiếu (Format) và giá vé cơ bản (BasePrice).
+Quản lý rạp cũng chịu trách nhiệm quản lý các phòng chiếu trong rạp. Mỗi phòng chiếu được quản lý bởi một quản lý và mỗi quản lý có thể quản lý nhiều phòng chiếu khác nhau. 
+Hệ thống cần lưu thông tin trong quá trình quản lý các phòng chiếu cho biết hành động của quản lý với phòng chiếu (ActionType) đó bao gồm quản lý cấu trúc phòng, loại phòng và sơ đồ bố trí ghế, đồng thời ghi nhận thời gian thực hiện hành động (ActionDate).
+
+% STAFF — Sell → BOOKING
+Bên cạnh việc đặt vé trực tuyến, khách hàng cũng có thể đến trực tiếp quầy bán vé của rạp để mua vé. Mỗi quầy bán vé được định danh một mã số riêng (CounterID) cho phép một nhân viên bán vé vận hành quầy. 
+Trong quá trình bán vé, hệ thống cần lưu thông tin về thời gian bán vé (SellTime) và trạng thái xuất vé (PrintStatus) để đảm bảo vé không bị làm giả. 
+Đối với khách hàng làm mất vé, nhân viên có thể hỗ trợ in lại vé nếu khách hàng cung cấp đầy đủ thông tin về mã vé (BookingID) và thông tin cá nhân đã đăng ký.
+% STAFF — Manage → SEAT
+Ngoài việc bán vé, nhân viên còn chịu trách nhiệm quản lý sơ đồ ghế. Một nhân viên được phân công quản lý một dãy các ghế và đồng thời mỗi dãy ghế cũng được kiểm tra bởi nhiều nhân viên khác nhau. 
+Hệ thống cho phép nhân viên cập nhật tình trạng của ghế (SeatlockStatus) bao gồm khóa ghế, mở khóa ghế hay đánh dấu ghế hỏng, đồng thời ghi nhận thời gian thực hiện cập nhật (UpdateTime).
+% STAFF — Handle → PAYMENT
+Bên cạnh đó, nhân viên còn chịu trách nhiệm xử lý các yêu cầu đổi/hủy giao dịch tại quầy. Mỗi yêu cầu giao dịch được xử lý bởi một nhân viên và mỗi nhân viên có thể xử lý nhiều yêu cầu khác nhau.
+Hệ thống cần lưu thông tin về loại yêu cầu (RequestType) gồm đổi, hủy các giao dịch đã thực hiện kèm với số tiền hoàn trả (RefundAmount) và thời điểm các yêu cầu được xử lý (ProcessDate).
+
 Hệ thống cho phép người dùng thanh toán bằng nhiều hình thức khác nhau và lưu trữ thông tin thanh toán. 
 Mỗi thanh toán/hóa đơn có mã hóa đơn riêng (PaymentID) và thuộc về một vé duy nhất (BookingID). 
 Mỗi thanh toán có thể là giao dịch qua thẻ tín dụng, ví điện tử hay trực tiếp bằng tiền mặt. 
@@ -361,8 +379,6 @@ Mỗi thanh toán có thể là giao dịch qua thẻ tín dụng, ví điện t
 Đối với các thành toán trực tiếp tại quầy, hệ thống lưu trữ thông tin về tên nhân viên thu ngân (StaffName). 
 Trạng thái thanh toán (Status) cũng cần được lưu cho phép hệ thống kiểm tra giao dịch hoàn tất hay chưa. 
 Khi giao dịch hoàn tất, hệ thống cũng cần ghi nhận thời gian thực hiện giao dịch (PaymentTime), đảm bảo tính minh bạch cho hệ thống, nâng cao sự tín nhiệm với khách hàng.
-
-% Vinh lỏ vẫn lỏ
 
 \subsection{Mô tả các ràng buộc ngữ nghĩa}
 \begin{itemize}
