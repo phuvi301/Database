@@ -25,6 +25,7 @@
 \usepackage{bm}
 \usepackage{biblatex}
 \usepackage[colorlinks]{hyperref}
+
 \setlength{\parskip}{0.2cm}
 \newcommand{\cach}{\hspace*{1.5em}\ignorespaces}
 % \usepackage[acronym,toc]{glossaries}
@@ -37,7 +38,40 @@
  nogroupskip, nonumberlist, nomain
 ]{glossaries-extra}
 
+\usepackage{listings}
+\usepackage{xcolor}
 
+% Định nghĩa màu sắc giống VS Code/SSMS
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{sqlkeyword}{rgb}{0,0,1} % Màu xanh dương cho từ khóa
+
+% Cấu hình style cho SQL
+\lstdefinestyle{sqlstyle}{
+    language=SQL,
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{sqlkeyword}\bfseries, % Từ khóa in đậm màu xanh
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize, % Font chữ code
+    breakatwhitespace=false,         
+    breaklines=true,                 % Tự động xuống dòng nếu quá dài
+    captionpos=b,                    % Vị trí chú thích (bottom)
+    keepspaces=true,                 
+    numbers=left,                    % Hiển thị số dòng bên trái
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,                    % Thêm khung viền quanh code
+    morekeywords={use, go, references, if, exists} % Thêm các từ khóa của MS SQL (nếu cần)
+}
+
+\lstset{style=sqlstyle}
 % FORMATTING
 % {
 \DeclareMathOperator{\arccot}{arccot}
@@ -92,7 +126,7 @@
 		\tiny \bf 
 	\end{tabular}  }
 \fancyfoot{} % clear all footer fields
-\fancyfoot[L]{\scriptsize \ttfamily Báo cáo Bài tập lớn 1 Hệ cơ sở dữ liệu (TN) (CO2014) - HK251 - Năm học 2025 - 2026}
+\fancyfoot[L]{\scriptsize \ttfamily Báo cáo Bài tập lớn Hệ cơ sở dữ liệu (TN) (CO2014) - HK251 - Năm học 2025 - 2026}
 \fancyfoot[R]{\scriptsize \ttfamily Trang {\thepage}/\pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.3pt}
 \renewcommand{\footrulewidth}{0.3pt}
@@ -148,9 +182,9 @@
 			~~                                                                   \\
 			\hline
 			\\
-			\multicolumn{1}{l}{\textbf{{\Large Báo cáo  }}}                       \\
+			\multicolumn{1}{c}{\textbf{{\Large Báo cáo bài tập lớn  }}}                       \\
 			\\
-			\textbf{\textit{{\Huge Bài tập lớn 1 }}}                          \\
+			\textbf{\textit{{\Huge Hệ thống đặt vé xem phim }}}                          \\
 			\\
 			\hline
 		\end{tabular}
@@ -170,7 +204,7 @@
 			                    & Lê Minh Trí - 2313593 \emph{(Nhóm 7, \textbf{Leader})}           \\
 		\end{tabular}
 	\end{table}
-
+	\vfill
 	\begin{center}
 		{\footnotesize TP. HỒ CHÍ MINH, 09/2025}
 	\end{center}
@@ -411,4 +445,515 @@ Khi giao dịch hoàn tất, hệ thống cũng cần ghi nhận thời gian th�
 \pagebreak
 \section{Đường dẫn truy cập các sơ đồ}
 \cach Đường dẫn truy cập các sơ đồ như sau: $\href{https://drive.google.com/drive/folders/1Zwp_fdw1I9jSBugBzoHM8gc0wFd-WgGM?usp=sharing}{Link}$
+\section{Tạo bảng và dữ liệu mẫu}
+
+\cach Dựa trên thiết kế EERD và lược đồ quan hệ đã phân tích ở Bài tập lớn 1, nhóm tiến hành hiện thực hóa cơ sở dữ liệu trên hệ quản trị SQL Server. Phần này trình bày các câu lệnh DDL (Data Definition Language) để tạo bảng, thiết lập các ràng buộc toàn vẹn và DML (Data Manipulation Language) để thêm dữ liệu mẫu.
+
+\subsection{Tạo bảng và các ràng buộc (Constraints)}
+
+\cach Các bảng dữ liệu được tạo theo thứ tự để đảm bảo tính toàn vẹn tham chiếu (tạo bảng cha trước, bảng con sau). Các ràng buộc miền giá trị (Domain Constraints) được cài đặt trực tiếp bằng từ khóa \texttt{CHECK}.
+% Bảng CINEMA và ROOM
+\subsubsection{Bảng Rạp chiếu (CINEMA) và Phòng chiếu (ROOM)}
+\cach Bảng \texttt{CINEMA} lưu trữ thông tin các cụm rạp. Bảng \texttt{ROOM} lưu trữ thông tin phòng chiếu, có ràng buộc sức chứa (\texttt{Capacity}) phải lớn hơn 0 và loại phòng (\texttt{RoomType}) thuộc tập quy định.
+\begin{lstlisting}
+CREATE TABLE CINEMA (
+    CinemaID VARCHAR(10) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    Hotline VARCHAR(15),
+    Address NVARCHAR(200)
+);
+
+CREATE TABLE ROOM (
+    Room_ID VARCHAR(10) PRIMARY KEY,
+    CinemaID VARCHAR(10) NOT NULL,
+    RoomName NVARCHAR(50) NOT NULL,
+    RoomType NVARCHAR(20), 
+    Capacity INT NOT NULL,
+    
+    FOREIGN KEY (CinemaID) REFERENCES CINEMA(CinemaID),
+    CONSTRAINT CK_Room_Capacity CHECK (Capacity > 0),
+    CONSTRAINT CK_Room_Type CHECK (RoomType IN ('2D', '3D', 'IMAX', '4DX', 'Gold Class', 'Sweetbox', 'VIP')),
+);
+\end{lstlisting}
+% Bảng SEAT
+\subsubsection{Bảng Ghế (SEAT)}
+\cach Bảng \texttt{SEAT} lưu trữ thông tin ghế trong phòng chiếu, có ràng buộc hạng ghế (\texttt{SeatType}) thuộc tập quy định và thông tin ghế (\texttt{SeatInfo}) phải có định dạng gồm một chữ cái và các số.
+\begin{lstlisting}
+	CREATE TABLE SEAT (
+    Room_ID VARCHAR(10),
+    SeatInfo VARCHAR(10), 
+    SeatType NVARCHAR(20) NOT NULL,
+    
+    PRIMARY KEY (Room_ID, SeatInfo),
+    FOREIGN KEY (Room_ID) REFERENCES ROOM(Room_ID),
+    CONSTRAINT CK_Seat_Type CHECK (SeatType IN ('Standard', 'VIP', 'Couple', 'Deluxe')),
+    CONSTRAINT CK_Seat_SeatInfo CHECK (SeatInfo LIKE '[A-Z]%' AND ISNUMERIC(SUBSTRING(SeatInfo, 2, LEN(SeatInfo) - 1)) = 1)
+);
+\end{lstlisting}
+% Bảng USER và MOVIE
+\subsubsection{Bảng Khách hàng (USER) và Phim (MOVIE)}
+\cach Bảng \texttt{USER} có các ràng buộc quan trọng về định dạng số điện thoại, mật khẩu phức tạp và độ tuổi. Bảng \texttt{MOVIE} kiểm tra thời lượng phim phải là số dương và giới hạn độ tuổi hợp lệ.
+\begin{lstlisting}
+CREATE TABLE [USER] (
+    UserID VARCHAR(10) PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    Phone VARCHAR(15) NOT NULL,
+    Password VARCHAR(50) NOT NULL,
+    Birthday DATE,
+    Gender NVARCHAR(10),
+    CreatedAt DATETIME DEFAULT GETDATE(),
+
+    CONSTRAINT CK_User_Phone CHECK (LEN(Phone) = 10 AND ISNUMERIC(Phone) = 1),
+    CONSTRAINT CK_User_Gender CHECK (Gender IN ('Male', 'Female')),
+    CONSTRAINT CK_User_Birthday CHECK (Birthday < GETDATE()),
+    CONSTRAINT CK_User_Password CHECK (
+        LEN(Password) >= 8 AND 
+        Password COLLATE Latin1_General_BIN LIKE '%[A-Z]%' AND 
+        Password COLLATE Latin1_General_BIN LIKE '%[0-9]%' AND 
+        Password COLLATE Latin1_General_BIN LIKE '%[@$#%!&]%'
+    )
+);
+
+CREATE TABLE MOVIE (
+    Movie_ID VARCHAR(10) PRIMARY KEY,
+    Title NVARCHAR(100) NOT NULL,
+    Duration INT NOT NULL,
+    ReleaseDate DATE NOT NULL,
+    Description NVARCHAR(MAX),
+    Poster VARCHAR(200), 
+    Trailer VARCHAR(200), 
+    Language NVARCHAR(30),
+    AgeRating VARCHAR(5), 
+    Director NVARCHAR(50),
+    Prequel_ID VARCHAR(10), 
+
+    FOREIGN KEY (Prequel_ID) REFERENCES MOVIE(Movie_ID),
+    CONSTRAINT CK_Movie_Duration CHECK (Duration > 0),
+    CONSTRAINT CK_Movie_AgeRating CHECK (AgeRating IN ('P', 'T13', 'T16', 'T18', 'K') )
+);
+\end{lstlisting}
+% Bảng GENRE và ACTOR
+\subsubsection{Bảng Thể loại phim (Genre) và Diễn viên (Actor)}
+\cach Bảng \texttt{Genre} và bảng \texttt{Actor} lưu trữ thông tin thể loại phim và diễn viên, có ràng buộc thể loại thuộc tập quy định.
+\begin{lstlisting}
+CREATE TABLE GENRE (
+    Movie_ID VARCHAR(10),
+    Genre NVARCHAR(50),
+    PRIMARY KEY (Movie_ID, Genre),
+    FOREIGN KEY (Movie_ID) REFERENCES MOVIE(Movie_ID),
+    CONSTRAINT CK_Genre_Type CHECK (Genre IN ('Action', 'Comedy', 'Drama', 'Horror', 'Romance', 'Sci-Fi', 'Documentary', 'Animation', 'Thriller', 'Fantasy', 'Adventure', 'Musical', 'Biography', 'Crime', 'Family', 'Mystery', 'War', 'Western', 'Sport', 'History', 'Mysterious', 'Mythical') )
+);
+
+CREATE TABLE ACTOR (
+    Movie_ID VARCHAR(10),
+    Actor NVARCHAR(50),
+    PRIMARY KEY (Movie_ID, Actor),
+    FOREIGN KEY (Movie_ID) REFERENCES MOVIE(Movie_ID)
+);
+\end{lstlisting}
+% Bảng SHOWTIME và PAYMENT
+\subsubsection{Bảng Suất chiếu (SHOWTIME) và Thanh toán (PAYMENT)}
+\cach Bảng \texttt{SHOWTIME} chứa thông tin suất chiếu và các ràng buộc quan trọng: Giờ bắt đầu phải nhỏ hơn giờ kết thúc và giá vé phải dương và suất chiếu không được trùng lấp trong cùng một phòng và thời gian suất chiếu (EndTime - StartTime) phải lớn hơn hoặc bằng thời lượng gốc của bộ phim (sẽ được kiểm tra bằng Trigger). Bảng \texttt{PAYMENT} quản lý thông tin thanh toán với ràng buộc trạng thái thanh toán \texttt{PaymentStatus} phải thuộc tập quy định và thời gian thanh toán phải sau thời gian đặt vé và thời gian thanh toán phải trong vòng 24h kể từ thời gian đặt vé (sẽ được kiểm tra bằng Trigger).
+\begin{lstlisting}
+CREATE TABLE SHOWTIME (
+    Showtime_ID VARCHAR(10) PRIMARY KEY,
+    Movie_ID VARCHAR(10) NOT NULL,
+    Room_ID VARCHAR(10) NOT NULL,
+    BasePrice DECIMAL(18, 2) NOT NULL,
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NOT NULL,
+
+    FOREIGN KEY (Movie_ID) REFERENCES MOVIE(Movie_ID),
+    FOREIGN KEY (Room_ID) REFERENCES ROOM(Room_ID),
+    CONSTRAINT CK_Showtime_Price CHECK (BasePrice > 0),
+    CONSTRAINT CK_Showtime_Time CHECK (StartTime < EndTime)
+);
+
+CREATE TABLE PAYMENT (
+    Payment_ID VARCHAR(10) PRIMARY KEY,
+    PaymentTime DATETIME,
+    Status NVARCHAR(20) -- Success, Pending, Failed
+    CONSTRAINT CK_Payment_Status CHECK (Status IN ('Success', 'Pending', 'Failed') )
+);
+
+\end{lstlisting}
+% Bảng EMPLOYEE, STAFF, MANAGER
+\subsubsection{Bảng Nhân viên tổng quát (EMPLOYEE), Nhân viên (STAFF) và Quản lý (MANAGER)}
+\cach Bảng \texttt{EMPLOYEE} lưu trữ thông tin chung của nhân viên. Bảng \texttt{STAFF} và bảng \texttt{MANAGER} kế thừa từ bảng \texttt{EMPLOYEE} để lưu trữ thông tin riêng biệt của từng loại nhân viên, có ràng buộc lương thưởng phải dương và ca làm việc thuộc tập quy định. Bảng \texttt{MANAGER} có ràng buộc số lượng nhân viên quản lý phải lớn hơn hoặc bằng 0. Bảng \texttt{STAFF} có ràng buộc vị trí làm việc thuộc tập quy định.
+\begin{lstlisting}
+CREATE TABLE EMPLOYEE (
+    EmployeeID VARCHAR(10) PRIMARY KEY,
+    Cinema_ID VARCHAR(10) NOT NULL,
+    FirstName NVARCHAR(50),
+    LastName NVARCHAR(50),
+    Shift NVARCHAR(20),
+    Salary DECIMAL(18, 2),
+
+    FOREIGN KEY (Cinema_ID) REFERENCES CINEMA(CinemaID),
+    CONSTRAINT CK_Employee_Salary CHECK (Salary > 0),
+    CONSTRAINT CK_Employee_Shift CHECK (Shift IN ('Morning', 'Afternoon', 'Evening'))
+);
+
+CREATE TABLE STAFF (
+    Staff_ID VARCHAR(10) PRIMARY KEY,
+    Position NVARCHAR(50),
+    FOREIGN KEY (Staff_ID) REFERENCES EMPLOYEE(EmployeeID),
+    CONSTRAINT CK_Staff_Position CHECK (Position IN ('Cashier', 'Usher', 'Cleaner', 'Technician', 'FoodService'))
+);
+
+CREATE TABLE MANAGER (
+    Manager_ID VARCHAR(10) PRIMARY KEY,
+    Num_of_staff INT,
+    FOREIGN KEY (Manager_ID) REFERENCES EMPLOYEE(EmployeeID),
+    CONSTRAINT CK_Manage_Staff CHECK (Num_of_staff >= 0)
+);
+\end{lstlisting}
+% Bảng BOOKING
+\subsubsection{Bảng Đặt vé (BOOKING)}
+\cach Bảng \texttt{BOOKING} lưu trữ thông tin đặt vé, có ràng buộc thời gian đặt vé phải trước thời gian bắt đầu suất chiếu (sẽ được kiểm tra bằng Trigger).
+\begin{lstlisting}
+CREATE TABLE BOOKING (
+    Booking_ID VARCHAR(10) PRIMARY KEY,
+    UserID VARCHAR(10) NOT NULL,
+    PaymentID VARCHAR(10) UNIQUE, -- 1-1 Relationship
+    Staff_ID VARCHAR(10), 
+    TotalPrice DECIMAL(18, 2),
+    BookingTime DATETIME DEFAULT GETDATE(),
+
+    FOREIGN KEY (UserID) REFERENCES [USER](UserID),
+    FOREIGN KEY (PaymentID) REFERENCES PAYMENT(Payment_ID),
+    FOREIGN KEY (Staff_ID) REFERENCES STAFF(Staff_ID)
+);
+\end{lstlisting}
+\subsubsection{Bảng Khuyến mãi (VOUCHER), Điều kiện áp dụng voucher (CONDITION), Áp dụng voucher (APPLY\_FOR)}
+\cach Bảng \texttt{VOUCHER} lưu trữ thông tin voucher khuyến mãi với các ràng buộc về ngày bắt đầu và kết thúc và thuộc tính \texttt{DiscountType} phải thuộc tập quy định. Bảng \texttt{CONDITION} lưu trữ các điều kiện áp dụng voucher. Bảng \texttt{APPLY\_FOR} thể hiện mối quan hệ nhiều-nhiều giữa bảng \texttt{BOOKING} và bảng \texttt{VOUCHER}. 
+\begin{lstlisting}
+CREATE TABLE VOUCHER (
+    Promo_Code VARCHAR(20) PRIMARY KEY,
+    StartDate DATETIME NOT NULL,
+    EndDate DATETIME NOT NULL,
+    DiscountType NVARCHAR(20), -- Percent, Fixed
+    Percentage FLOAT,
+    FixedAmount DECIMAL(18, 2),
+    CONSTRAINT CK_Voucher_Date CHECK (StartDate < EndDate),
+    CONSTRAINT CK_Voucher_DiscountType CHECK (DiscountType IN ('Percent', 'Fixed'))
+);
+
+CREATE TABLE CONDITION (
+    Promo_Code VARCHAR(20),
+    Condition NVARCHAR(200),
+    PRIMARY KEY (Promo_Code, Condition),
+    FOREIGN KEY (Promo_Code) REFERENCES VOUCHER(Promo_Code)
+);
+
+CREATE TABLE APPLY_FOR (
+    Promo_Code VARCHAR(20),
+    Booking_ID VARCHAR(10),
+    PRIMARY KEY (Promo_Code, Booking_ID),
+    FOREIGN KEY (Promo_Code) REFERENCES VOUCHER(Promo_Code),
+    FOREIGN KEY (Booking_ID) REFERENCES BOOKING(Booking_ID)
+);
+\end{lstlisting}
+% Bảng F&B, INCLUDE_SEAT
+\subsubsection{Bảng Đồ ăn \& Nước uống (F\&B) và Chi tiết đặt ghế (INCLUDE\_SEAT)}
+\cach Bảng \texttt{F\&B} lưu trữ thông tin đồ ăn và nước uống với ràng buộc giá tiền phải dương. Bảng \texttt{INCLUDE\_SEAT} thể hiện mối quan hệ 1 - 1 - nhiều giữa bảng \texttt{BOOKING}, bảng \texttt{SHOWTIME} và bảng \texttt{SEAT} với ràng buộc \texttt{SeatStatus} phải thuộc tập quy định.
+\begin{lstlisting}
+CREATE TABLE F_B (
+    FB_ID VARCHAR(10),
+    Booking_ID VARCHAR(10),
+    FBName NVARCHAR(50),
+    Price DECIMAL(18, 2),
+
+    PRIMARY KEY (FB_ID, Booking_ID),
+    FOREIGN KEY (Booking_ID) REFERENCES BOOKING(Booking_ID),
+    CONSTRAINT CK_FB_Price CHECK (Price > 0)
+);
+
+CREATE TABLE INCLUDE_SEAT (
+	Room_ID VARCHAR(10),
+    SeatInfo VARCHAR(10),
+    Showtime_ID VARCHAR(10),
+    Booking_ID VARCHAR(10),
+    SeatStatus NVARCHAR(20), -- Booked, Sold
+	
+    PRIMARY KEY (Room_ID, SeatInfo, Showtime_ID),
+    FOREIGN KEY (Room_ID, SeatInfo) REFERENCES SEAT(Room_ID, SeatInfo),
+    FOREIGN KEY (Showtime_ID) REFERENCES SHOWTIME(Showtime_ID),
+    FOREIGN KEY (Booking_ID) REFERENCES BOOKING(Booking_ID),
+    CONSTRAINT CK_IncludeSeat_Status CHECK (SeatStatus IN ('Booked', 'Sold'))
+	);
+\end{lstlisting}
+% Bảng MANAGE_MOVIE, MANAGE_SHOWTIME, MANAGE_ROOM
+\subsubsection{Bảng Quản lý phim (MANAGE\_MOVIE), Quản lý suất chiếu (SCHEDULE) và Quản lý phòng chiếu (MANAGE\_ROOM)}
+\cach Bảng \texttt{MANAGE\_MOVIE}, bảng \texttt{SCHEDULE} và bảng \texttt{MANAGE\_ROOM} lưu trữ thông tin quản lý phim, suất chiếu và phòng chiếu tương ứng. Được thực hiện bởi các quản lý rạp với các ràng buộc về loại hành động (\texttt{ActionType}) và loại điều chỉnh (\texttt{Format}) phải thuộc tập quy định.
+\begin{lstlisting}
+CREATE TABLE MANAGE_MOVIE (
+    Movie_ID VARCHAR(10),
+    Manager_ID VARCHAR(10),
+    ActionType NVARCHAR(50),
+    ActionDate DATETIME,
+
+    PRIMARY KEY (Movie_ID, Manager_ID, ActionDate),
+    FOREIGN KEY (Movie_ID) REFERENCES MOVIE(Movie_ID),
+    FOREIGN KEY (Manager_ID) REFERENCES MANAGER(Manager_ID),
+    CONSTRAINT CK_ManageMovie_ActionType CHECK (ActionType IN ('Add', 'Update', 'Remove'))
+);
+
+CREATE TABLE MANAGE_ROOM (
+    Room_ID VARCHAR(10),
+    Manager_ID VARCHAR(10),
+    ActionType NVARCHAR(50),
+    ActionDate DATETIME,
+
+    PRIMARY KEY (Room_ID, Manager_ID, ActionDate),
+    FOREIGN KEY (Room_ID) REFERENCES ROOM(Room_ID),
+    FOREIGN KEY (Manager_ID) REFERENCES MANAGER(Manager_ID),
+    CONSTRAINT CK_ManageRoom_ActionType CHECK (ActionType IN ('Add', 'Update', 'Remove'))
+);
+
+CREATE TABLE SCHEDULE (
+    Showtime_ID VARCHAR(10) PRIMARY KEY,
+    Manager_ID VARCHAR(10),
+    Format NVARCHAR(20),
+    ScheduleDate DATE,
+    DurationAdjust INT,
+    PriceAdjust DECIMAL(18, 2),
+
+    FOREIGN KEY (Showtime_ID) REFERENCES SHOWTIME(Showtime_ID),
+    FOREIGN KEY (Manager_ID) REFERENCES MANAGER(Manager_ID)
+);
+\end{lstlisting}
+\subsubsection{Bảng Bán vé (SELL)}
+% Bảng SELL
+\cach Bảng \texttt{SELL} lưu trữ thông tin bán vé (thời điểm bán vé, trạng thái in của vé).
+\begin{lstlisting}
+CREATE TABLE SELL (
+    Booking_ID VARCHAR(10) PRIMARY KEY,
+    Staff_ID VARCHAR(10),
+    PrintStatus BIT,
+    SaleTime DATETIME,
+
+    FOREIGN KEY (Booking_ID) REFERENCES BOOKING(Booking_ID),
+    FOREIGN KEY (Staff_ID) REFERENCES STAFF(Staff_ID)
+);
+\end{lstlisting}
+% Bảng HANDLE
+\subsubsection{Bảng Xử lý (HANDLE)}
+\cach Bảng \texttt{HANDLE} lưu trữ thông tin xử lý thanh toán.
+\begin{lstlisting}
+CREATE TABLE HANDLE (
+    Payment_ID VARCHAR(10),
+    Staff_ID VARCHAR(10),
+    ProcessDate DATETIME,
+
+    PRIMARY KEY (Payment_ID, Staff_ID),
+    FOREIGN KEY (Payment_ID) REFERENCES PAYMENT(Payment_ID),
+    FOREIGN KEY (Staff_ID) REFERENCES STAFF(Staff_ID),
+);
+\end{lstlisting}
+% Bảng MANAGE_ROOM_STATUS
+\subsubsection{Bảng Xử lý (MANAGE\_ROOM\_STATUS)}
+\cach Bảng \texttt{MANAGE\_ROOM\_STATUS} lưu trữ thông tin phân công nhân viên quản lý phòng chiếu.
+\begin{lstlisting}
+CREATE TABLE MANAGE_ROOM_STATUS (
+    Room_ID VARCHAR(10),
+    Staff_ID VARCHAR(10),
+    UpdateTime DATETIME,
+    
+    PRIMARY KEY (Room_ID, Staff_ID, UpdateTime),
+    FOREIGN KEY (Room_ID) REFERENCES ROOM(Room_ID),
+    FOREIGN KEY (Staff_ID) REFERENCES STAFF(Staff_ID)
+);
+\end{lstlisting}
+
+% Viết thủ tục cho bảng USER
+\section{Viết các thủ tục, trigger và hàm}
+\subsection{Viết thủ tục cho bảng USER}
+\cach Trong phần này, nhóm chúng em sẽ trình bày các thủ tục để thêm (insert), sửa (update) và xóa (delete) dữ liệu vào bảng \texttt{USER} trong cơ sở dữ liệu. Các thủ tục này đều bao gồm việc kiểm tra dữ liệu hợp lệ (validate) để đảm bảo rằng dữ liệu được nhập vào bảng đáp ứng các ràng buộc cụ thể. Đồng thời, các thông báo lỗi cụ thể cũng được xuất ra khi có lỗi, giúp người dùng dễ dàng xác định vấn đề.
+\subsubsection{Thủ tục \texttt{sp\_InsertUser}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_InsertUser
+@UserID VARCHAR(10),
+@FirstName NVARCHAR(50),
+@LastName NVARCHAR(50),
+@Email VARCHAR(100),
+@Phone VARCHAR(15),
+@Password VARCHAR(50),
+@Birthday DATE,
+@Gender NVARCHAR(10)
+AS
+BEGIN
+SET NOCOUNT ON;
+-- 1. Kiem tra trung UserID
+\begin{lstlisting}
+IF EXISTS (SELECT 1 FROM [USER] WHERE UserID = @UserID)
+BEGIN
+    ;THROW 50001, N'Loi: UserID nay da ton tai trong he thong.', 1;
+    RETURN;
+END
+-- 2. Kiem tra trung Email
+IF EXISTS (SELECT 1 FROM [USER] WHERE Email = @Email)
+BEGIN
+    ;THROW 50002, N'Loi: Email nay da duoc su dung boi tai khoan khac.', 1;
+    RETURN;
+END
+-- 3. Validate So dien thoai (Phai la so va dai 10 ky tu)
+IF (LEN(@Phone) <> 10 OR ISNUMERIC(@Phone) = 0)
+BEGIN
+    ;THROW 50003, N'Loi: So dien thoai khong hop le (Phai bao gom dung 10 chu so).', 1;
+    RETURN;
+END
+
+-- 4. Validate Mat khau (>= 8 ky tu, co chu hoa, so, ky tu dac biet)
+IF (LEN(@Password) < 8 
+    OR @Password COLLATE Latin1_General_BIN NOT LIKE '%[A-Z]%' 
+    OR @Password COLLATE Latin1_General_BIN NOT LIKE '%[0-9]%' 
+    OR @Password COLLATE Latin1_General_BIN NOT LIKE '%[@$#%!&]%')
+BEGIN
+    ;THROW 50004, N'Loi: Mat khau yeu. Phai co it nhat 8 ky tu, bao gom chu hoa, so va ky tu dac biet (@$#%!&).', 1;
+    RETURN;
+END
+
+-- 5. Validate Tuoi (Khach hang > 13 tuoi va ngay sinh < thoi diem hien tai)
+IF (@Birthday >= GETDATE())
+BEGIN
+    ;THROW 50005, N'Loi: Ngay sinh khong duoc lon hon ngay hien tai.', 1;
+    RETURN;
+END
+
+-- 6. Validate Gioi tinh
+IF (@Gender NOT IN ('Male', 'Female'))
+BEGIN
+    ;THROW 50007, N'Loi: Gioi tinh khong hop le (Chi chap nhan "Male" hoac "Female").', 1;
+    RETURN;
+END
+
+-- Neu tat ca hop le, thuc hien INSERT
+INSERT INTO [USER] (UserID, FirstName, LastName, Email, Phone, Password, Birthday, Gender, CreatedAt)
+VALUES (@UserID, @FirstName, @LastName, @Email, @Phone, @Password, @Birthday, @Gender, GETDATE());
+
+PRINT N'Them nguoi dung moi thanh cong!';
+
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_InsertUser} là thủ tục dùng để thêm người dùng mới vào bảng \texttt{USER}.
+
+Các kiểm tra đầu tiên đảm bảo rằng \texttt{UserID} và \texttt{Email} không bị trùng lặp trong hệ thống, đảm bảo tính duy nhất của các trường này.
+
+Thủ tục cũng kiểm tra tính hợp lệ của số điện thoại (phải là số và dài 10 ký tự), mật khẩu (ít nhất 8 ký tự, có chữ hoa, số, và ký tự đặc biệt), tuổi của người dùng (ngày sinh không được lớn hơn ngày hiện tại), và giới tính (phải là "Male" hoặc "Female").
+
+Nếu tất cả các điều kiện đều hợp lệ, thủ tục thực hiện thêm thông tin người dùng vào bảng \texttt{USER}.
+
+\subsubsection{Thủ tục \texttt{sp\_UpdateUser}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_UpdateUser
+@UserID VARCHAR(10),
+@NewEmail VARCHAR(100),
+@NewPhone VARCHAR(15),
+@NewPassword VARCHAR(50)
+AS
+BEGIN
+SET NOCOUNT ON;
+-- 1. Kiem tra UserID co ton tai khong
+IF NOT EXISTS (SELECT 1 FROM [USER] WHERE UserID = @UserID)
+BEGIN
+    ;THROW 50008, N'Loi: Khong tim thay UserID can cap nhat.', 1;
+    RETURN;
+END
+
+-- 2. Validate Email moi: Khong duoc trung voi user khac
+IF EXISTS (SELECT 1 FROM [USER] WHERE Email = @NewEmail AND UserID <> @UserID)
+BEGIN
+    ;THROW 50009, N'Loi: Email moi da thuoc ve mot tai khoan khac.', 1;
+    RETURN;
+END
+
+-- 3. Validate Phone moi
+IF (LEN(@NewPhone) <> 10 OR ISNUMERIC(@NewPhone) = 0)
+BEGIN
+    ;THROW 50010, N'Loi: So dien thoai moi khong hop le.', 1;
+    RETURN;
+END
+
+-- 4. Validate Password moi
+IF (LEN(@NewPassword) < 8 
+    OR @NewPassword COLLATE Latin1_General_BIN NOT LIKE '%[A-Z]%' 
+    OR @NewPassword COLLATE Latin1_General_BIN NOT LIKE '%[0-9]%' 
+    OR @NewPassword COLLATE Latin1_General_BIN NOT LIKE '%[@$#%!&]%')
+BEGIN
+    ;THROW 50011, N'Loi: Mat khau moi khong du manh.', 1;
+    RETURN;
+END
+
+-- Thuc hien UPDATE
+UPDATE [USER]
+SET Email = @NewEmail,
+    Phone = @NewPhone,
+    Password = @NewPassword
+WHERE UserID = @UserID;
+
+PRINT N'Cap nhat thong tin nguoi dung thanh cong!';
+
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_UpdateUser} là thủ tục dùng để cập nhật thông tin người dùng.
+
+Thủ tục kiểm tra sự tồn tại của \texttt{UserID}, đảm bảo rằng người dùng cần cập nhật phải tồn tại trong cơ sở dữ liệu.
+
+Sau đó, thủ tục kiểm tra tính hợp lệ của \texttt{Email} (không được trùng với tài khoản khác), \texttt{Phone} (phải là số và đủ 10 chữ số) và \texttt{Password} (phải đủ mạnh, bao gồm chữ hoa, số và ký tự đặc biệt).
+
+Nếu tất cả các kiểm tra hợp lệ, thủ tục thực hiện cập nhật thông tin của người dùng trong bảng \texttt{USER}.
+
+\subsubsection{Thủ tục \texttt{sp\_DeleteUser}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_DeleteUser
+@UserID VARCHAR(10)
+AS
+BEGIN
+SET NOCOUNT ON;
+-- 1. Kiem tra UserID co ton tai khong
+IF NOT EXISTS (SELECT 1 FROM [USER] WHERE UserID = @UserID)
+BEGIN
+    ;THROW 50012, N'Loi: UserID khong ton tai de xoa.', 1;
+    RETURN;
+END
+
+-- 2. Kiem tra rang buoc du lieu (Neu User da tung dat ve)
+IF EXISTS (SELECT 1 FROM BOOKING WHERE UserID = @UserID)
+BEGIN
+    ;THROW 50013, N'Loi: Khong the xoa nguoi dung nay vi ho da co lich su giao dich (Booking). Hay vo hieu hoa tai khoan nay thay vi xoa.', 1;
+    RETURN;
+END
+
+-- Neu thoa man dieu kien (chua tung mua ve), thuc hien DELETE
+DELETE FROM [USER]
+WHERE UserID = @UserID;
+
+PRINT N'Xoa nguoi dung thanh cong!';
+
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_DeleteUser} là thủ tục dùng để xóa người dùng khỏi bảng \texttt{USER}.
+
+Thủ tục đầu tiên kiểm tra sự tồn tại của \texttt{UserID}.
+
+Nếu người dùng đã từng thực hiện giao dịch (có lịch sử trong bảng \texttt{BOOKING}), thủ tục không cho phép xóa và xuất ra thông báo lỗi.
+
+Nếu người dùng chưa thực hiện giao dịch nào, thủ tục thực hiện xóa người dùng khỏi bảng \texttt{USER}.
+
+\subsection*{Mục đích và Tại sao cần kiểm tra?}
+
+\textbf{Mục đích của thủ tục:} Các thủ tục này nhằm đảm bảo tính toàn vẹn của dữ liệu trong bảng \texttt{USER}, đồng thời đảm bảo rằng các thông tin người dùng được nhập vào hệ thống phải hợp lệ và đáp ứng các yêu cầu bảo mật như mật khẩu mạnh và thông tin liên lạc chính xác.
+
+\textbf{Kiểm tra dữ liệu:} Việc kiểm tra dữ liệu nhằm phát hiện sớm các lỗi nhập liệu, tránh việc nhập vào các thông tin sai hoặc không hợp lệ, như \texttt{Email} trùng lặp, số điện thoại sai định dạng, hoặc mật khẩu yếu. Các kiểm tra này cũng giúp bảo vệ tính bảo mật và bảo vệ quyền lợi của người dùng trong hệ thống.
+
+\textbf{Lý do cần xóa dữ liệu:} Thủ tục xóa người dùng chỉ thực hiện khi người dùng không có giao dịch lịch sử. Việc này nhằm đảm bảo tính toàn vẹn của dữ liệu và không làm mất các thông tin liên quan đến các giao dịch đã thực hiện.
 \end{document}
