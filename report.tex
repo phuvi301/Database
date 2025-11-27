@@ -786,7 +786,7 @@ CREATE PROCEDURE sp_InsertUser
 AS
 BEGIN
 SET NOCOUNT ON;
--- 1. Kiem tra trung UserID
+-- 1. Kiem tra trung khoa chinh (UserID)
 \begin{lstlisting}
 IF EXISTS (SELECT 1 FROM [USER] WHERE UserID = @UserID)
 BEGIN
@@ -848,6 +848,24 @@ Thủ tục cũng kiểm tra tính hợp lệ của số điện thoại (phải
 
 Nếu tất cả các điều kiện đều hợp lệ, thủ tục thực hiện thêm thông tin người dùng vào bảng \texttt{USER}.
 
+\noindent\textbf{Testing:}
+\begin{lstlisting}
+-- Test 1: Them user voi mat khau yeu (Se bao loi 50004)
+EXEC sp_InsertUser 'US_TEST', N'Test', N'User', 'test@mail.com', '0901234567', '12345', '2000-01-01', 'Male';
+
+-- Test 2: Them user hop le
+EXEC sp_InsertUser 'US_TEST', N'Test', N'User', 'test@mail.com', '0901234567', 'Pass@123', '2000-01-01', 'Male';
+\end{lstlisting}
+
+\noindent\textbf{Kết quả:}
+\begin{figure}[H]
+    \includegraphics[width=1.0\textwidth]{Images/test004_1.png}
+    \caption{Kết quả test 1}
+    \includegraphics[width=1.0\textwidth]{Images/test004_2.png}
+    \includegraphics[width=1.0\textwidth]{Images/test004_2_1.png}
+    \caption{Kết quả test 2 và bảng USER sau khi thêm user thành công}
+\end{figure}
+
 \subsubsection{Thủ tục \texttt{sp\_UpdateUser}}
 \begin{lstlisting}
 CREATE PROCEDURE sp_UpdateUser
@@ -865,7 +883,7 @@ BEGIN
     RETURN;
 END
 
--- 2. Validate Email moi: Khong duoc trung voi user khac
+-- 2. Validate Email moi: Khong duoc trung voi user khac (nhung duoc trung voi chinh minh)
 IF EXISTS (SELECT 1 FROM [USER] WHERE Email = @NewEmail AND UserID <> @UserID)
 BEGIN
     ;THROW 50009, N'Loi: Email moi da thuoc ve mot tai khoan khac.', 1;
@@ -910,6 +928,24 @@ Sau đó, thủ tục kiểm tra tính hợp lệ của \texttt{Email} (không �
 
 Nếu tất cả các kiểm tra hợp lệ, thủ tục thực hiện cập nhật thông tin của người dùng trong bảng \texttt{USER}.
 
+\noindent\textbf{Testing:}
+\begin{lstlisting}
+-- Test 3: Cap nhat thong tin cua userID khong ton tai (That bai)
+EXEC sp_UpdateUser 'US_100', 'abc@gmail.com', '0901122334', 'StrongPass1@';
+
+-- Test 4: Cap nhat thong tin hop le
+EXEC sp_UpdateUser 'US_TEST', 'newemail@mail.com', '0908765432', 'NewPass@123';
+\end{lstlisting}
+
+\noindent\textbf{Kết quả:}
+\begin{figure}[H]
+    \includegraphics[width=1.0\textwidth]{Images/test004_3.png}
+    \caption{Kết quả test 3}
+    \includegraphics[width=1.0\textwidth]{Images/test004_4.png}
+    \includegraphics[width=1.0\textwidth]{Images/test004_4_1.png}
+    \caption{Kết quả test 4 và UserID: "US\_TEST" sau khi cập nhật thành công}
+\end{figure}
+
 \subsubsection{Thủ tục \texttt{sp\_DeleteUser}}
 \begin{lstlisting}
 CREATE PROCEDURE sp_DeleteUser
@@ -925,6 +961,7 @@ BEGIN
 END
 
 -- 2. Kiem tra rang buoc du lieu (Neu User da tung dat ve)
+-- Neu User da tung dat ve (ton tai trong bang BOOKING), KHONG DUOC XOA.
 IF EXISTS (SELECT 1 FROM BOOKING WHERE UserID = @UserID)
 BEGIN
     ;THROW 50013, N'Loi: Khong the xoa nguoi dung nay vi ho da co lich su giao dich (Booking). Hay vo hieu hoa tai khoan nay thay vi xoa.', 1;
@@ -949,6 +986,24 @@ Nếu người dùng đã từng thực hiện giao dịch (có lịch sử tron
 
 Nếu người dùng chưa thực hiện giao dịch nào, thủ tục thực hiện xóa người dùng khỏi bảng \texttt{USER}.
 
+\noindent\textbf{Testing:}
+\begin{lstlisting}
+-- Test 5: Xoa user US001 (That bai vi US001 da co Booking trong du lieu mau truoc do)
+EXEC sp_DeleteUser 'US001';
+
+-- Test 6: Xoa user vua tao (Thanh cong vi chua mua ve)
+EXEC sp_DeleteUser 'US_TEST';
+\end{lstlisting}
+
+\noindent\textbf{Kết quả:}
+\begin{figure}[H]
+    \includegraphics[width=1.0\textwidth]{Images/test004_5.png}
+    \caption{Kết quả test 5}
+    \includegraphics[width=1.0\textwidth]{Images/test004_6.png}
+    \includegraphics[width=1.0\textwidth]{Images/test004_6_1.png}
+    \caption{Kết quả test 6 và bảng USER sau khi xóa user thành công}
+\end{figure}
+
 \subsection*{Mục đích và Tại sao cần kiểm tra?}
 
 \textbf{Mục đích của thủ tục:} Các thủ tục này nhằm đảm bảo tính toàn vẹn của dữ liệu trong bảng \texttt{USER}, đồng thời đảm bảo rằng các thông tin người dùng được nhập vào hệ thống phải hợp lệ và đáp ứng các yêu cầu bảo mật như mật khẩu mạnh và thông tin liên lạc chính xác.
@@ -956,4 +1011,119 @@ Nếu người dùng chưa thực hiện giao dịch nào, thủ tục thực hi
 \textbf{Kiểm tra dữ liệu:} Việc kiểm tra dữ liệu nhằm phát hiện sớm các lỗi nhập liệu, tránh việc nhập vào các thông tin sai hoặc không hợp lệ, như \texttt{Email} trùng lặp, số điện thoại sai định dạng, hoặc mật khẩu yếu. Các kiểm tra này cũng giúp bảo vệ tính bảo mật và bảo vệ quyền lợi của người dùng trong hệ thống.
 
 \textbf{Lý do cần xóa dữ liệu:} Thủ tục xóa người dùng chỉ thực hiện khi người dùng không có giao dịch lịch sử. Việc này nhằm đảm bảo tính toàn vẹn của dữ liệu và không làm mất các thông tin liên quan đến các giao dịch đã thực hiện.
+
+\subsection{Trigger}
+% TODO
+
+\subsection{Thủ tục truy vấn}
+\subsubsection{Thủ tục \texttt{sp\_ReportUserSpendingByDate}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_ReportUserSpendingByDate
+    @StartDate DATETIME,
+    @EndDate DATETIME,
+    @MinSpending DECIMAL(18, 2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        U.UserID,
+        U.FirstName + ' ' + U.LastName AS "Ho Ten",
+        U.Phone,
+        U.Email,
+        COUNT(B.Booking_ID) AS "Tong So Don Hang",
+        SUM(B.TotalPrice) AS "Tong Chi Tieu"
+    FROM 
+        [USER] U
+    JOIN 
+        BOOKING B ON U.UserID = B.UserID
+    JOIN 
+        PAYMENT P ON B.PaymentID = P.Payment_ID
+    WHERE 
+        (B.BookingTime BETWEEN @StartDate AND @EndDate)
+        AND P.Status = 'Success'
+    GROUP BY 
+        U.UserID, U.FirstName, U.LastName, U.Phone, U.Email
+    HAVING 
+        SUM(B.TotalPrice) >= @MinSpending
+    ORDER BY 
+        "Tong Chi Tieu" DESC;
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_ReportUserSpendingByDate} là thủ tục dùng để lọc ra danh sách những khách hàng đã chi tiêu trong một khoảng thời gian nhất định, đồng thời đạt mức chi tiêu tối thiểu.
+
+Thủ tục yêu cầu 3 thông tin:
+\begin{itemize}
+    \item[-] @StartDate, @EndDate: Khoảng thời gian cần thu thập.
+    \item[-] @MinSpending: Mức chi tiêu tối thiểu.
+\end{itemize}
+
+Thủ tục tiến hành kết nối các bảng USER, BOOKING, PAYMENT với điều kiện các đơn hàng phải thuộc trong khoảng thời gian cần thu thập. 
+Từ đó kết quả trả về sẽ bao gồm UserID, Họ tên USER, Số điện thoại, Email và các thuộc tính dẫn xuất như Tổng số đơn hàng và Tổng chi tiêu. 
+
+Từ danh sách kết quả trả về, thủ tục tiến hành gộp nhóm theo thông tin cá nhân của khách hàng, 
+đồng thời tính toán các thông tin về Tổng số đơn hàng và Tổng chi tiêu của khách hàng.
+
+Sau khi đã thực hiện gộp nhóm và tính toán các thông số dẫn xuất, thủ tục tiến hành lọc các khách hàng có tổng chi tiêu thỏa yêu cầu về mức chi tối thiếu.
+
+Cuối cùng, thủ tục trả về danh sách các kết quả thỏa mãn các bộ lọc, thông qua thao tác sắp xếp mức chi tiêu giảm dần để dễ dàng nhận biết các khách hàng ``VIP'' của hệ thống.
+
+Dữ liệu trả về có thể được sử dụng để áp dụng các chương trình tri ân khách hàng đặc biệt dựa trên mức chi tiêu mà khách hàng đã thực hiện, 
+đồng thời cũng là công cụ hữu hiệu đối với các cấp quản lý khi đưa ra các quyết định quan trọng của hệ thống,
+
+\subsubsection{Thủ tục \texttt{sp\_SearchShowtime}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_SearchShowtime
+    @MovieTitle NVARCHAR(100),
+    @SearchDate DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        M.Title AS "Ten Phim",
+        C.Name AS "Ten Rap",
+        R.RoomName AS "Phong Chieu",
+        R.RoomType AS "Loai Phong",
+        S.StartTime AS "Gio Chieu",
+        S.BasePrice AS "Gia Ve Co Ban"
+    FROM 
+        SHOWTIME S
+    JOIN 
+        MOVIE M ON S.Movie_ID = M.Movie_ID
+    JOIN 
+        ROOM R ON S.Room_ID = R.Room_ID
+    JOIN 
+        CINEMA C ON R.CinemaID = C.CinemaID
+    WHERE 
+        M.Title LIKE '%' + @MovieTitle + '%'
+        AND CAST(S.StartTime AS DATE) >= @SearchDate
+    ORDER BY 
+        M.Title ASC,
+        S.StartTime ASC,
+        C.Name ASC;
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_SearchShowtime} là thủ tục được thiết kế để tìm kiếm lịch chiếu phim trong hệ thống. 
+Nó cho phép người dùng (hoặc ứng dụng) tìm các suất chiếu dựa trên tên phim (gần đúng) và ngày bắt đầu xem.
+
+Thủ tục yêu cầu 2 thông tin:
+\begin{itemize}
+    \item[-] @MovieTitle: Tên phim cần tìm (hỗ trợ tiếng Việt có dấu)
+    \item[-] @SearchDate: Mốc thời gian tìm kiếm
+\end{itemize}
+
+Thủ tục tiến hành kết nối các bảng MOVIE, ROOM, CINEMA vào SHOWTIME. Từ đó, kết quả trả về sẽ bao gồm Tên phim, Tên rạp, Phòng chiếu, Loại phòng, Giờ chiếu và Giá vé.
+
+Từ danh sách đã kết nối, thủ tục tiến hành các bộ lọc:
+\begin{itemize}
+    \item[-] Lọc tên phim: Thủ tục áp dụng phép tính gần đúng để tìm tất cả các phim có chứa tên phim được yêu cầu.
+    \item[-] Lọc thời gian tìm kiếm: Sau khi lọc theo tên phim, thủ tục tiếp tục lọc các suất chiếu từ ngày được yêu cầu trở về sau. Điều này giúp hệ thống gợi ý thêm cho người dùng nếu phim người dùng mong muốn không có suất chiếu trong ngày hôm đó.
+\end{itemize}
+
+Cuối cùng, thủ tục trả về danh sách các kết quả thỏa mãn các bộ lọc, thông qua thao tác sắp xếp với mức ưu tiên cao nhất cho tên phim, tiếp theo là thời gian suất chiếu và cuối cùng theo tên rạp.
 \end{document}
