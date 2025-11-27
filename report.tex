@@ -956,4 +956,266 @@ Nếu người dùng chưa thực hiện giao dịch nào, thủ tục thực hi
 \textbf{Kiểm tra dữ liệu:} Việc kiểm tra dữ liệu nhằm phát hiện sớm các lỗi nhập liệu, tránh việc nhập vào các thông tin sai hoặc không hợp lệ, như \texttt{Email} trùng lặp, số điện thoại sai định dạng, hoặc mật khẩu yếu. Các kiểm tra này cũng giúp bảo vệ tính bảo mật và bảo vệ quyền lợi của người dùng trong hệ thống.
 
 \textbf{Lý do cần xóa dữ liệu:} Thủ tục xóa người dùng chỉ thực hiện khi người dùng không có giao dịch lịch sử. Việc này nhằm đảm bảo tính toàn vẹn của dữ liệu và không làm mất các thông tin liên quan đến các giao dịch đã thực hiện.
+
+\subsection{Trigger}
+% TODO
+
+\subsection{Thủ tục truy vấn}
+\subsubsection{Thủ tục \texttt{sp\_ReportUserSpendingByDate}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_ReportUserSpendingByDate
+    @StartDate DATETIME,
+    @EndDate DATETIME,
+    @MinSpending DECIMAL(18, 2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @StartDate IS NULL OR @EndDate IS NULL
+    BEGIN
+        ;THROW 51005, N'Loi: Cac tham so (@StartDate, @EndDate) la bat buoc.', 1;
+    END
+
+    IF @StartDate > @EndDate OR @StartDate > GETDATE() OR @EndDate > GETDATE()
+    BEGIN
+        ;THROW 51002, N'Loi: Thoi gian tra cuu khong hop le.', 1;
+    END
+
+    IF @MinSpending < 0
+    BEGIN
+        ;THROW 51001, N'Loi: Muc chi tieu toi thieu (@MinSpending) khong hop le.', 1;
+    END
+
+    PRINT N'Bat dau tao bao cao chi tieu...';
+
+    SELECT 
+        U.UserID,
+        U.FirstName + ' ' + U.LastName AS "Ho Ten",
+        U.Phone,
+        U.Email,
+        COUNT(B.Booking_ID) AS "Tong So Don Hang",
+        SUM(B.TotalPrice) AS "Tong Chi Tieu"
+    FROM 
+        [USER] U
+    JOIN 
+        BOOKING B ON U.UserID = B.UserID
+    JOIN 
+        PAYMENT P ON B.PaymentID = P.Payment_ID
+    WHERE 
+        (B.BookingTime BETWEEN @StartDate AND @EndDate)
+        AND P.Status = 'Success'
+    GROUP BY 
+        U.UserID, U.FirstName, U.LastName, U.Phone, U.Email
+    HAVING 
+        SUM(B.TotalPrice) >= ISNULL(@MinSpending, 0)
+    ORDER BY 
+        "Tong Chi Tieu" DESC;
+
+    DECLARE @RowFound INT = @@ROWCOUNT;
+
+    IF @RowFound = 0
+    BEGIN
+        PRINT N'Thong bao: Khong tim thay du lieu.';
+    END
+    ELSE
+    BEGIN
+        PRINT N'Thanh cong: Da tim thay ' + CAST(@RowFound AS NVARCHAR(10)) + N' khach hang.';
+    END
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_ReportUserSpendingByDate} là thủ tục dùng để lọc ra danh sách những khách hàng đã chi tiêu trong một khoảng thời gian nhất định, đồng thời đạt mức chi tiêu tối thiểu.
+
+Thủ tục yêu cầu 3 thông tin:
+\begin{itemize}
+    \item[-] @StartDate, @EndDate: Khoảng thời gian cần thu thập.
+    \item[-] @MinSpending: Mức chi tiêu tối thiểu.
+\end{itemize}
+
+Thủ tục tiến hành kết nối các bảng USER, BOOKING, PAYMENT với điều kiện các đơn hàng phải thuộc trong khoảng thời gian cần thu thập. 
+Từ đó kết quả trả về sẽ bao gồm UserID, Họ tên USER, Số điện thoại, Email và các thuộc tính dẫn xuất như Tổng số đơn hàng và Tổng chi tiêu. 
+
+Từ danh sách kết quả trả về, thủ tục tiến hành gộp nhóm theo thông tin cá nhân của khách hàng, 
+đồng thời tính toán các thông tin về Tổng số đơn hàng và Tổng chi tiêu của khách hàng.
+
+Sau khi đã thực hiện gộp nhóm và tính toán các thông số dẫn xuất, thủ tục tiến hành lọc các khách hàng có tổng chi tiêu thỏa yêu cầu về mức chi tối thiếu.
+
+Cuối cùng, thủ tục trả về danh sách các kết quả thỏa mãn các bộ lọc, thông qua thao tác sắp xếp mức chi tiêu giảm dần để dễ dàng nhận biết các khách hàng ``VIP'' của hệ thống.
+
+Dữ liệu trả về có thể được sử dụng để áp dụng các chương trình tri ân khách hàng đặc biệt dựa trên mức chi tiêu mà khách hàng đã thực hiện, 
+đồng thời cũng là công cụ hữu hiệu đối với các cấp quản lý khi đưa ra các quyết định quan trọng của hệ thống,
+
+\textbf{Xử lý ngoại lệ}
+\begin{itemize}
+    \item[-] Nếu người dùng không truyền tham số @StartDate, @EndDate, thủ tục trả về lỗi và không thực thi truy vấn.
+    \item[-] Nếu các tham số @StartDate, @EndDate không hợp lệ (Vd: @StartDate > @EndDate), thủ tục trả về lỗi và không thực thi truy vấn.
+    \item[-] Nếu tham số @MinSpending được truyền vào không hợp lệ (Vd: số ấm), thủ tục trả về lỗi và không thực thi truy vấn.
+\end{itemize}
+
+\textbf{Testing}
+\begin{lstlisting}
+-- Test 1: Truy suat thong tin hop le
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = '2024-01-01', 
+    @EndDate = '2024-12-31', 
+    @MinSpending = 200000;
+
+-- Test 2: Truyen tham so khong hop le
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = NULL,
+    @EndDate = NULL,
+    @MinSpending = NULL;
+
+-- Test 3: Tham so @MinSpending khong hop le
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = '2024-01-01', 
+    @EndDate = '2024-12-31', 
+    @MinSpending = -1;
+
+-- Test 4: Tham so @MinSpending khong duoc truyen, gia tri mac dinh la 0
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = '2024-01-01', 
+    @EndDate = '2024-12-31', 
+    @MinSpending = NULL;
+\end{lstlisting}
+\textbf{Kết quả}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test1_1.png}
+    \includegraphics[width=\textwidth]{Images/TT1_Test1_2.png}
+    \caption{Kết quả Test 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test2.png}
+    \caption{Kết quả Test 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test3.png}
+    \caption{Kết quả Test 3}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test4_1.png}
+    \includegraphics[width=\textwidth]{Images/TT1_Test4_2.png}
+    \caption{Kết quả Test 4}
+\end{figure}
+
+\subsubsection{Thủ tục \texttt{sp\_SearchShowtime}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_SearchShowtime
+    @MovieTitle NVARCHAR(100),
+    @SearchDate DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @MovieTitle IS NULL OR LTRIM(RTRIM(@MovieTitle)) = '' OR @SearchDate IS NULL
+    BEGIN
+        ;THROW 51005, N'Loi: Cac tham so (@MovieTitle, @SearchDate) la bat buoc.', 1;
+    END
+
+    IF @SearchDate > GETDATE()
+    BEGIN
+        ;THROW 51003, N'Loi: Ngay tim kiem (@SearchDate) khong hop le.', 1;
+    END
+
+    PRINT N'Tu khoa phim: ' + @MovieTitle;
+    PRINT N'Thoi gian tu ngay: ' + CONVERT(NVARCHAR, @SearchDate, 103);
+    PRINT N'Dang tim kiem lich chieu...';
+
+    SELECT 
+        M.Title AS "Ten Phim",
+        C.Name AS "Ten Rap",
+        R.RoomName AS "Phong Chieu",
+        R.RoomType AS "Loai Phong",
+        S.StartTime AS "Gio Chieu",
+        S.BasePrice AS "Gia Ve Co Ban"
+    FROM 
+        SHOWTIME S
+    JOIN 
+        MOVIE M ON S.Movie_ID = M.Movie_ID
+    JOIN 
+        ROOM R ON S.Room_ID = R.Room_ID
+    JOIN 
+        CINEMA C ON R.CinemaID = C.CinemaID
+    WHERE 
+        M.Title LIKE '%' + @MovieTitle + '%'
+        AND CAST(S.StartTime AS DATE) >= @SearchDate
+    ORDER BY 
+        M.Title ASC,
+        S.StartTime ASC,
+        C.Name ASC;
+    
+    DECLARE @RowFound INT = @@ROWCOUNT;
+
+    IF @RowFound = 0
+    BEGIN
+        PRINT N'Thong bao: Khong tim thay suat chieu nao phu hop.';
+    END
+    ELSE
+    BEGIN
+        PRINT N'Thanh cong: Tim thay ' + CAST(@RowFound AS NVARCHAR(10)) + N' suat chieu.';
+    END
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_SearchShowtime} là thủ tục được thiết kế để tìm kiếm lịch chiếu phim trong hệ thống. 
+Nó cho phép người dùng (hoặc ứng dụng) tìm các suất chiếu dựa trên tên phim (gần đúng) và ngày bắt đầu xem.
+
+Thủ tục yêu cầu 2 thông tin:
+\begin{itemize}
+    \item[-] @MovieTitle: Tên phim cần tìm (hỗ trợ tiếng Việt có dấu)
+    \item[-] @SearchDate: Mốc thời gian tìm kiếm
+\end{itemize}
+
+Thủ tục tiến hành kết nối các bảng MOVIE, ROOM, CINEMA vào SHOWTIME. Từ đó, kết quả trả về sẽ bao gồm Tên phim, Tên rạp, Phòng chiếu, Loại phòng, Giờ chiếu và Giá vé.
+
+Từ danh sách đã kết nối, thủ tục tiến hành các bộ lọc:
+\begin{itemize}
+    \item[-] Lọc tên phim: Thủ tục áp dụng phép tính gần đúng để tìm tất cả các phim có chứa tên phim được yêu cầu.
+    \item[-] Lọc thời gian tìm kiếm: Sau khi lọc theo tên phim, thủ tục tiếp tục lọc các suất chiếu từ ngày được yêu cầu trở về sau. Điều này giúp hệ thống gợi ý thêm cho người dùng nếu phim người dùng mong muốn không có suất chiếu trong ngày hôm đó.
+\end{itemize}
+
+Cuối cùng, thủ tục trả về danh sách các kết quả thỏa mãn các bộ lọc, thông qua thao tác sắp xếp với mức ưu tiên cao nhất cho tên phim, tiếp theo là thời gian suất chiếu và cuối cùng theo tên rạp.
+
+\textbf{Xử lý ngoại lệ}
+\begin{itemize}
+    \item[-] Nếu người dùng không truyền tham số @MovieTitle, @SearchDate hoặc truyền dữ liệu rỗng, thủ tục trả về lỗi và không thực thi truy vấn.
+    \item[-] Nếu tham số @SearchDate không hợp lệ (Vd: @SearchDate > GETDATE()), thủ tục trả về lỗi và không thực thi truy vấn.
+\end{itemize}
+
+\textbf{Testing}
+\begin{lstlisting}
+-- Test 1: Truy xuat thong tin hop le
+EXEC sp_SearchShowtime @MovieTitle = N'Lat Mat', @SearchDate = '2024-01-01';
+
+-- Test 2: Truyen tham so khong hop le
+EXEC sp_SearchShowtime @MovieTitle = N'', @SearchDate = '';
+
+-- Test 3: Thoi gian truy xuat khong hop le
+EXEC sp_SearchShowtime @MovieTitle = N'Mai', @SearchDate = '2026-01-01';
+\end{lstlisting}
+
+\textbf{Kết quả}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT2_Test1_1.png}
+    \includegraphics[width=\textwidth]{Images/TT2_Test1_2.png}
+    \caption{Kết quả Test 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT2_Test2.png}
+    \caption{Kết quả Test 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT2_Test3.png}
+    \caption{Kết quả Test 3}
+\end{figure}
+
 \end{document}
