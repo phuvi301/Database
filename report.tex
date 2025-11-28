@@ -25,7 +25,9 @@
 \usepackage{bm}
 \usepackage{biblatex}
 \usepackage[colorlinks]{hyperref}
-
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[utf8]{inputenc}
 \setlength{\parskip}{0.2cm}
 \newcommand{\cach}{\hspace*{1.5em}\ignorespaces}
 % \usepackage[acronym,toc]{glossaries}
@@ -47,6 +49,21 @@
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 \definecolor{sqlkeyword}{rgb}{0,0,1} % Màu xanh dương cho từ khóa
+% Định nghĩa màu cho terminal lỗi
+\definecolor{terminalbg}{rgb}{0,0,0}
+\definecolor{terminalerr}{rgb}{1,0,0}
+
+% Style cho terminal báo lỗi
+\lstdefinestyle{error-terminal}{
+  backgroundcolor=\color{terminalbg},
+  basicstyle=\ttfamily\color{terminalerr},
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true
+  % chỉnh cỡ chữ thành 10
+  \footnotesize
+}
 
 % Cấu hình style cho SQL
 \lstdefinestyle{sqlstyle}{
@@ -767,6 +784,154 @@ CREATE TABLE MANAGE_ROOM_STATUS (
     FOREIGN KEY (Staff_ID) REFERENCES STAFF(Staff_ID)
 );
 \end{lstlisting}
+\subsection{Tạo dữ liệu mẫu}
+\cach Để kiểm chứng tính đúng đắn của thiết kế CSDL và hoạt động của các ràng buộc toàn vẹn, nhóm đã xây dựng một bộ dữ liệu mẫu mô phỏng hệ thống rạp phim CGV thực tế tại TP.HCM.
+\subsection{Mô tả dữ liệu chi tiết}
+
+\subsubsection{Hệ thống Rạp và Phòng chiếu}
+Hệ thống bao gồm 10 cụm rạp CGV lớn tại TP.HCM. Mỗi rạp có các loại phòng chiếu đa dạng (IMAX, 4DX, Sweetbox, Gold Class).
+
+\begin{lstlisting}[caption={Dữ liệu Rạp và Phòng chiếu}]
+-- Insert Rap CGV
+INSERT INTO CINEMA (CinemaID, Name, Hotline, Address) VALUES 
+('CN001', N'CGV Vincom Dong Khoi', '19006017', N'72 Le Thanh Ton...'),
+('CN002', N'CGV Landmark 81', '19006017', N'772 Dien Bien Phu...');
+
+-- Insert Phong chieu voi suc chua va loai phong cu the
+INSERT INTO ROOM (Room_ID, CinemaID, RoomName, RoomType, Capacity) VALUES 
+('R001', 'CN001', N'Cinema 1', 'IMAX', 250),
+('R005', 'CN003', N'Cinema 1', 'Gold Class', 80);
+\end{lstlisting}
+
+\subsubsection{Người dùng và Nhân sự}
+\begin{itemize}
+    \item \textbf{Khách hàng (User):} Bao gồm 23 tài khoản, trong đó có tích hợp thông tin của các thành viên trong nhóm thực hiện đề tài (US019 - US023) để phục vụ demo.
+    \item \textbf{Nhân viên (Employee):} Phân chia rõ ràng giữa cấp Quản lý (Manager) và Nhân viên (Staff) với các ca làm việc (Shift) và mức lương khác nhau.
+\end{itemize}
+
+\begin{lstlisting}
+-- Insert Thanh vien nhom
+INSERT INTO [USER] (UserID, FirstName, LastName, Email...) VALUES 
+('US019', N'Nguyen', N'Phu Vinh', 'svPV@gmail.com'... ),
+('US023', N'Le', N'Minh Tri', 'svLMT@gmail.com'... );
+
+-- Phan cap Nhan vien va Quan ly
+INSERT INTO EMPLOYEE (EmployeeID, Shift, Salary...) VALUES ('EM001', 'Morning', 5000000...);
+INSERT INTO MANAGER (Manager_ID, Num_of_staff) VALUES ('EM001', 10);
+INSERT INTO STAFF (Staff_ID, Position) VALUES ('EM002', 'Cashier');
+\end{lstlisting}
+
+\subsubsection{Phim và Lịch chiếu}
+Dữ liệu phim bao gồm đầy đủ thông tin về Đạo diễn, Diễn viên, Thể loại và giới hạn độ tuổi. Đặc biệt có Series phim "Lật Mặt" từ phần 1 đến phần 8 để kiểm tra truy vấn phim theo series (Prequel).
+
+\begin{lstlisting}
+INSERT INTO MOVIE (Movie_ID, Title, Duration, AgeRating...) VALUES 
+('MV001', N'Mai', 131, 'T18'...),
+('MV002', N'Dune: Part Two', 166, 'T16'...),
+('MV018', N'Lat Mat 7: Mot Dieu Uoc', 105, 'P'...);
+
+INSERT INTO GENRE (Movie_ID, Genre) VALUES 
+('MV001', 'Drama'),
+('MV002', 'Sci-Fi'),
+('MV018', 'Action');
+
+INSERT INTO ACTOR (Movie_ID, Actor) VALUES 
+('MV001', N'Tran Nghia'),
+('MV002', N'Timothee Chalamet'),
+('MV018', N'Thanh Loc');
+
+INSERT INTO SHOWTIME (Showtime_ID, Movie_ID, Room_ID, BasePrice, StartTime, EndTime) VALUES 
+('ST001', 'MV001', 'R001', 120000, '2024-07-01 14:00', '2024-07-01 16:11'),
+('ST002', 'MV002', 'R002', 150000, '2024-07-01 17:00', '2024-07-01 19:46');
+
+\end{lstlisting}
+
+\subsubsection{Giao dịch Đặt vé (Transaction Flow)}
+Đây là phần phức tạp nhất, mô phỏng quy trình nghiệp vụ trọn vẹn:
+\begin{enumerate}
+    \item Khách hàng chọn Suất chiếu (\texttt{SHOWTIME}).
+    \item Chọn Ghế (\texttt{INCLUDE\_SEAT}) và Combo bắp nước (\texttt{F\_B}).
+    \item Áp dụng mã giảm giá (\texttt{VOUCHER} - ví dụ: SUMMER2024, TET2024).
+    \item Thanh toán (\texttt{PAYMENT} - Tiền mặt hoặc Thẻ).
+\end{enumerate}
+
+\begin{lstlisting}
+-- 1. Tao Giao dich Payment truoc
+INSERT INTO PAYMENT (Payment_ID, Status) VALUES ('PM001', 'Success');
+
+INSERT INTO CASH (Payment_ID, RefundAmount) VALUES 
+('PM001', 0), ('PM002', 0), ('PM003', 0), ('PM004', 0), ('PM009', 0);
+
+INSERT INTO CARD (Payment_ID, PaymentCode, BankName, CardNumber) VALUES 
+('PM005', 'TXN005', 'ACB', '9704123456790'),
+('PM006', 'TXN006', 'Vietcombank', '9704123456789'),
+
+-- 2. Tao Booking ket noi User va Payment
+INSERT INTO BOOKING (Booking_ID, UserID, PaymentID...) VALUES 
+('BK001', 'US001', 'PM001'...);
+
+-- 3. Chi tiet Ghe va Do an
+INSERT INTO INCLUDE_SEAT (Room_ID, SeatInfo, Booking_ID...) VALUES 
+('R001', 'A1', 'BK001'...);
+INSERT INTO F_B (FB_ID, Booking_ID, FBName...) VALUES 
+('CB01', 'BK001', N'Combo Popcorn Solo'...);
+
+-- 4. Ap dung Voucher
+INSERT INTO APPLY_FOR (Promo_Code, Booking_ID) VALUES ('TET2024', 'BK001');
+\end{lstlisting}
+\subsubsection{Các hoạt động của MANAGER}
+\cach Dữ liệu ghi nhận các hoạt động quản lý của các quản lý rạp, bao gồm thêm, sửa, xóa phim và phòng chiếu, cũng như điều chỉnh lịch chiếu.
+\begin{lstlisting}
+--Bang Manage_Movie
+INSERT INTO MANAGE_MOVIE (Movie_ID, Manager_ID, ActionType, ActionDate) VALUES 
+('MV001', 'EM004', 'Add', '2024-01-20 08:00:00'),
+('MV002', 'EM004', 'Add', '2024-02-15 09:00:00'),
+('MV003', 'EM006', 'Add', '2024-02-20 10:00:00'),
+('MV004', 'EM004', 'Update', '2024-03-16 11:00:00'),
+
+--Bang Manage_Room
+INSERT INTO MANAGE_ROOM (Room_ID, Manager_ID, ActionType, ActionDate) VALUES 
+('R001', 'EM001', 'Add', '2021-12-01 08:00:00'),
+('R002', 'EM001', 'Add', '2021-12-01 09:00:00'),
+('R003', 'EM004', 'Add', '2021-01-10 10:00:00'),
+('R005', 'EM006', 'Add', '2020-11-15 08:00:00'),
+
+
+--Bang Schedule
+INSERT INTO SCHEDULE (Showtime_ID, Manager_ID, Format, ScheduleDate, DurationAdjust, PriceAdjust) VALUES 
+('SH001', 'EM001', '2D', '2024-02-10', 0, 0),
+('SH002', 'EM001', '2D', '2024-02-10', 0, 10000),
+('SH003', 'EM001', 'IMAX', '2024-02-25', 0, 20000),
+('SH004', 'EM004', '3D', '2024-03-05', 0, 0),
+\end{lstlisting}
+
+\subsubsection{Các hoạt động của Nhân viên}
+\cach Dữ liệu ghi nhận các hoạt động của nhân viên trong việc xử lý thanh toán và bán vé cho khách hàng. Đồng thời, quản lý phòng chiếu.
+\begin{lstlisting}
+INSERT INTO SELL (Booking_ID, Staff_ID, PrintStatus, SaleTime) VALUES 
+('BK001', 'EM003', 1, '2024-02-14 16:55:00'),
+('BK002', 'EM003', 1, '2024-02-14 20:25:00'),
+('BK003', 'EM003', 1, '2024-03-02 18:25:00'),
+('BK004', 'EM002', 1, '2024-03-09 09:25:00'),
+('BK009', 'EM007', 1, '2024-07-27 18:05:00');
+
+INSERT INTO HANDLE (Payment_ID, Staff_ID, ProcessDate) VALUES 
+('PM001', 'EM003', '2024-02-14 17:00:00'),
+('PM002', 'EM003', '2024-02-14 20:30:00'),
+('PM003', 'EM003', '2024-03-02 18:30:00'),
+('PM004', 'EM002', '2024-03-09 09:30:00'),
+('PM009', 'EM007', '2024-07-27 19:30:00');
+
+INSERT INTO MANAGE_ROOM_STATUS (Room_ID, Staff_ID, UpdateTime) VALUES 
+('R001', 'EM003', '2024-02-14 16:00:00'),
+('R001', 'EM003', '2024-02-14 23:30:00'),
+('R002', 'EM003', '2024-03-02 22:00:00'),
+('R003', 'EM002', '2024-03-09 12:00:00'),
+('R004', 'EM002', '2024-03-17 01:30:00'),
+('R005', 'EM005', '2024-03-30 17:15:00'),
+\end{lstlisting}
+
+
 
 % Viết thủ tục cho bảng USER
 \section{Viết các thủ tục, trigger và hàm}
@@ -1012,7 +1177,462 @@ EXEC sp_DeleteUser 'US_TEST';
 
 \textbf{Lý do cần xóa dữ liệu:} Thủ tục xóa người dùng chỉ thực hiện khi người dùng không có giao dịch lịch sử. Việc này nhằm đảm bảo tính toàn vẹn của dữ liệu và không làm mất các thông tin liên quan đến các giao dịch đã thực hiện.
 
-\subsection{Trigger}
+\subsection{Viết các Trigger}
+\subsubsection{Trigger kiểm tra ngày khởi chiếu hợp lệ}
+\begin{itemize}
+    \item \textbf{1. Ràng buộc nghiệp vụ:} Ngày bắt đầu suất chiếu (\texttt{StartTime}) phải diễn ra sau hoặc cùng ngày với ngày khởi chiếu chính thức (\texttt{ReleaseDate}) của bộ phim.
+    
+    \item \textbf{2. Thao tác DML vi phạm:} \texttt{INSERT}, \texttt{UPDATE} trên bảng \texttt{SHOWTIME}.
+    
+    \item \textbf{3. Mã lệnh Trigger:}
+\begin{lstlisting}
+CREATE TRIGGER trg_Check_ReleaseDate
+ON SHOWTIME
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM INSERTED i
+        JOIN MOVIE m ON i.Movie_ID = m.Movie_ID
+        WHERE m.ReleaseDate > i.StartTime
+    )
+    BEGIN
+        RAISERROR (N'Loi: Ngay khoi chieu phim phai som hon thoi gian bat dau suat chieu.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+\end{lstlisting}
+
+    \item \textbf{4. Dữ liệu minh họa (Test Case):}
+\begin{lstlisting}
+-- Phim MV001 cong chieu 2026. Tao suat chieu nam 2025 -> LOI
+INSERT INTO SHOWTIME (Showtime_ID, Movie_ID, Room_ID, BasePrice, StartTime, EndTime)
+VALUES ('ST_TEST_1', 'MV001', 'R001', 100000, '2025-12-31 18:00', '2025-12-31 20:00');
+\end{lstlisting}
+
+\begin{lstlisting}[style=error-terminal]
+Msg 50000, Level 16, State 1, Procedure trg_Check_Showtime_Duration_Valid, Line 16
+Loi: Thoi gian suat chieu (EndTime - StartTime) ngan hon thoi luong goc cua bo phim.
+Msg 3609, Level 16, State 1, Line 1
+The transaction ended in the trigger. The batch has been aborted.
+\end{lstlisting}
+
+\end{itemize}
+
+\subsubsection{Trigger chống trùng lịch chiếu (Overlap)}
+\begin{itemize}
+    \item \textbf{1. Ràng buộc nghiệp vụ:} Trong cùng một phòng chiếu (\texttt{Room\_ID}), không được phép có hai suất chiếu chồng chéo thời gian lên nhau.
+    
+    \item \textbf{2. Thao tác DML vi phạm:} \texttt{INSERT}, \texttt{UPDATE} trên bảng \texttt{SHOWTIME}.
+    
+    \item \textbf{3. Mã lệnh Trigger:}
+\begin{lstlisting}
+CREATE TRIGGER trg_Check_Showtime_Overlap
+ON SHOWTIME
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM INSERTED i
+        JOIN SHOWTIME s ON i.Room_ID = s.Room_ID
+        WHERE i.Showtime_ID <> s.Showtime_ID -- Khong so sanh voi chinh no
+          AND (
+              (i.StartTime >= s.StartTime AND i.StartTime < s.EndTime)
+              OR (i.EndTime > s.StartTime AND i.EndTime <= s.EndTime)
+              OR (i.StartTime <= s.StartTime AND i.EndTime >= s.EndTime)
+          )
+    )
+    BEGIN
+        RAISERROR (N'Loi: Suat chieu bi trung thoi gian trong cung mot phong.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+\end{lstlisting}
+
+    \item \textbf{4. Dữ liệu minh họa (Test Case):}
+\begin{lstlisting}
+-- Tao suat chieu 19:00 - 21:00 chong len suat 18:00 - 20:00 da co -> LOI
+INSERT INTO SHOWTIME (Showtime_ID, Movie_ID, Room_ID, BasePrice, StartTime, EndTime)
+VALUES ('ST_ERR', 'MV001', 'R001', 100000, '2024-02-14 19:00', '2024-02-14 21:00');
+\end{lstlisting}
+
+\begin{lstlisting}[style=error-terminal]
+Msg 50000, Level 16, State 1, Procedure trg_Check_Showtime_Overlap, Line 22
+Loi: Suat chieu bi trung thoi gian trong cung mot phong.
+Msg 3609, Level 16, State 1, Line 2
+The transaction ended in the trigger. The batch has been aborted.
+\end{lstlisting}
+
+\end{itemize}
+
+\subsubsection{Trigger kiểm tra thời gian đặt vé}
+\begin{itemize}
+    \item \textbf{1. Ràng buộc nghiệp vụ:} Thời gian đặt vé (\texttt{BookingTime}) phải sớm hơn thời gian bắt đầu suất chiếu.
+    \item \textbf{2. Thao tác DML vi phạm:} \texttt{INSERT}, \texttt{UPDATE} trên bảng \texttt{INCLUDE\_SEAT}.
+    \item \textbf{3. Mã lệnh Trigger:}
+\begin{lstlisting}
+CREATE TRIGGER trg_Check_BookingTime
+ON INCLUDE_SEAT
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM INSERTED i
+        JOIN BOOKING b ON i.Booking_ID = b.Booking_ID
+        JOIN SHOWTIME s ON i.Showtime_ID = s.Showtime_ID
+        WHERE b.BookingTime >= s.StartTime
+    )
+    BEGIN
+        RAISERROR (N'Loi: Thoi gian dat ve phai som hon suat chieu.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+\end{lstlisting}
+    \item \textbf{4. Ví dụ minh họa:}
+\begin{lstlisting}
+INSERT INTO BOOKING(BOOKING_ID, USERID,BOOKINGTIME) VALUES ('BK_TEST_1','US001','2025-11-28 18:00:00');
+INSERT INTO INCLUDE_SEAT(ROOM_ID,SEATINFO,SHOWTIME_ID,BOOKING_ID,SEATSTATUS) VALUES ('R010','B2','SH019','BK_TEST_1','Booked');
+\end{lstlisting}
+
+\begin{lstlisting}[style=error-terminal]
+Msg 50000, Level 16, State 1, Procedure trg_Check_BookingTime, Line 16
+Loi: Thoi gian dat ve phai som hon thoi gian bat dau suat chieu.
+Msg 3609, Level 16, State 1, Line 1
+The transaction ended in the trigger. The batch has been aborted.
+\end{lstlisting}
+\end{itemize}
+
+\subsubsection{Trigger kiểm tra thời gian thanh toán}
+\begin{itemize}
+    \item \textbf{1. Ràng buộc nghiệp vụ:} Thời gian thanh toán phải diễn ra sau khi đã tạo đơn đặt vé.
+    \item \textbf{2. Thao tác DML vi phạm:} \texttt{INSERT}, \texttt{UPDATE} trên bảng \texttt{PAYMENT}.
+    \item \textbf{3. Mã lệnh Trigger:}
+\begin{lstlisting}
+CREATE TRIGGER trg_Check_PaymentTime
+ON BOOKING
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM INSERTED p
+        JOIN PAYMENT b ON b.Payment_ID = p.PaymentID
+        WHERE p.BookingTime >= b.PaymentTime
+    )
+    BEGIN
+        RAISERROR ('Loi: Thoi gian thanh toan phai sau thoi gian dat ve.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+\end{lstlisting}
+    \item \textbf{4. Ví dụ minh họa:}
+\begin{lstlisting}
+INSERT INTO BOOKING(BOOKING_ID, USERID, PaymentID,BOOKINGTIME) VALUES ('BK_TEST_1','US001','PMT_TEST_1','2025-11-28 18:00:00');
+INSERT INTO PAYMENT(Payment_ID, PaymentTime) VALUES ('PMT_TEST_1','2025-11-28 17:00:00');
+\end{lstlisting}
+
+\begin{lstlisting}[style=error-terminal]
+Msg 50000, Level 16, State 1, Procedure trg_Check_PaymentTime, Line 14
+Loi: Thoi gian thanh toan phai sau thoi gian dat ve.
+Msg 3609, Level 16, State 1, Line 1
+The transaction ended in the trigger. The batch has been aborted.
+\end{lstlisting}
+\end{itemize}
+
+\subsubsection{Trigger kiểm tra hạn thanh toán trong 24h}
+\begin{itemize}
+    \item \textbf{1. Ràng buộc nghiệp vụ:} Thanh toán phải thực hiện trong vòng 24 giờ kể từ khi đặt vé.
+    \item \textbf{2. Thao tác DML vi phạm:} \texttt{INSERT}, \texttt{UPDATE} trên bảng \texttt{PAYMENT}.
+    \item \textbf{3. Mã lệnh Trigger:}
+\begin{lstlisting}
+CREATE TRIGGER trg_Check_Payment_Within_24Hours
+ON BOOKING
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM INSERTED p
+        JOIN PAYMENT b ON p.PaymentID = b.Payment_ID
+        WHERE DATEDIFF(HOUR, p.BookingTime, b.PaymentTime) > 24
+    )
+    BEGIN
+        RAISERROR ('Loi: Thoi gian thanh toan phai trong vong 24 gio ke tu thoi gian dat ve.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+\end{lstlisting}
+    \item \textbf{4. Ví dụ minh họa:}
+\begin{lstlisting}
+INSERT INTO PAYMENT (Payment_ID, PaymentTime)
+VALUES ('PM_ERR', '2025-01-10 09:00:00');
+INSERT INTO BOOKING (Booking_ID, UserID, PaymentID, BookingTime)
+VALUES ('BK_ERR', 'US001', 'PM_ERR', '2025-01-08 10:00:00');
+\end{lstlisting}
+
+\begin{lstlisting}[style=error-terminal]
+Msg 50000, Level 16, State 1, Procedure trg_Check_Payment_Within_24Hours, Line 13
+Loi: Thoi gian thanh toan phai trong vong 24 gio ke tu thoi gian dat ve.
+Msg 3609, Level 16, State 1, Line 1
+The transaction ended in the trigger. The batch has been aborted.
+\end{lstlisting}
+
+\end{itemize}
+
+\subsubsection{Trigger kiểm tra thời lượng suất chiếu}
+\begin{itemize}
+    \item \textbf{1. Ràng buộc nghiệp vụ:} Thời gian chiếu (\texttt{EndTime - StartTime}) phải đủ dài để chiếu hết bộ phim.
+    \item \textbf{2. Thao tác DML vi phạm:} \texttt{INSERT}, \texttt{UPDATE} trên bảng \texttt{SHOWTIME}.
+    \item \textbf{3. Mã lệnh Trigger:}
+\begin{lstlisting}
+CREATE TRIGGER trg_Check_Showtime_Duration_Valid
+ON SHOWTIME
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM INSERTED i
+        JOIN MOVIE m ON i.Movie_ID = m.Movie_ID
+        WHERE DATEDIFF(MINUTE, i.StartTime, i.EndTime) < m.Duration
+    )
+    BEGIN
+        RAISERROR (N'Loi: Thoi gian suat chieu ngan hon phim.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+\end{lstlisting}
+    \item \textbf{4. Ví dụ minh họa:}
+\begin{lstlisting}
+INSERT INTO SHOWTIME (Showtime_ID, Movie_ID, Room_ID, BasePrice, StartTime, EndTime)
+VALUES ('ST_TEST_2', 'MV001', 'R001', 100000, '2026-01-01 18:00', '2026-01-01 19:00');
+\end{lstlisting}
+
+\begin{lstlisting}[style=error-terminal]
+Msg 50000, Level 16, State 1, Procedure trg_Check_Showtime_Duration_Valid, Line 16
+Loi: Thoi gian suat chieu (EndTime - StartTime) ngan hon thoi luong goc cua bo phim.
+Msg 3609, Level 16, State 1, Line 1
+The transaction ended in the trigger. The batch has been aborted.
+\end{lstlisting}
+
+\end{itemize}
+
+\subsubsection{Trigger tính thuộc tính dẫn xuất TotalPrice trong BOOKING}
+\begin{itemize}
+    \item \textbf{1. Chọn thuộc tính dẫn xuất:} \texttt{TotalPrice} (Tổng tiền cuối cùng) trong bảng \texttt{BOOKING}.
+    
+    \textit{Công thức tính:} 
+    \[ TotalPrice = (\sum TienVe + \sum TienFB) - Voucher \]
+    
+    \item \textbf{2. Các thao tác DML làm thay đổi giá trị:} 
+    Giá trị \texttt{TotalPrice} phụ thuộc vào dữ liệu của 3 bảng khác nhau, do đó cần bắt sự kiện trên cả 3 bảng:
+    \begin{itemize}
+        \item Bảng \texttt{INCLUDE\_SEAT}: \texttt{INSERT}, \texttt{UPDATE}, \texttt{DELETE} (Thay đổi số lượng ghế).
+        \item Bảng \texttt{F\_B}: \texttt{INSERT}, \texttt{UPDATE}, \texttt{DELETE} (Thay đổi dịch vụ ăn uống).
+        \item Bảng \texttt{APPLY\_FOR}: \texttt{INSERT}, \texttt{DELETE} (Áp dụng hoặc gỡ bỏ mã giảm giá).
+    \end{itemize}
+    
+    \item \textbf{3. Mã lệnh (Stored Procedure \& Trigger):}
+    
+    \textit{Giải pháp:} Do yêu cầu phải tính tổng tiền hàng (Vé + F\&B) trước thì mới tính được mức giảm giá của Voucher (ví dụ giảm 10\% trên tổng đơn), nên nhóm sử dụng một \textbf{Stored Procedure} trung tâm để xử lý tuần tự logic này, sau đó các Trigger sẽ gọi Procedure đó.
+
+    \textbf{A. Stored Procedure (Bộ xử lý trung tâm):}
+\begin{lstlisting}
+CREATE PROCEDURE sp_Calculate_Booking_Total
+    @BookingID VARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @TotalTicket DECIMAL(18, 2) = 0;
+    DECLARE @TotalFB DECIMAL(18, 2) = 0;
+    DECLARE @Discount DECIMAL(18, 2) = 0;
+    DECLARE @FinalPrice DECIMAL(18, 2) = 0;
+
+    -- BUOC 1: Tinh tong tien ve (Cong don tung ve trong INCLUDE_SEAT)
+    SELECT @TotalTicket = ISNULL(SUM(ST.BasePrice), 0)
+    FROM INCLUDE_SEAT INS JOIN SHOWTIME ST ON INS.Showtime_ID = ST.Showtime_ID
+    WHERE INS.Booking_ID = @BookingID;
+
+    -- BUOC 2: Tinh tong tien F&B (Cong don tung mon trong F_B)
+    SELECT @TotalFB = ISNULL(SUM(Price), 0) FROM F_B WHERE Booking_ID = @BookingID;
+
+    -- Tong tam tinh (Subtotal) truoc khi giam gia
+    DECLARE @SubTotal DECIMAL(18, 2) = @TotalTicket + @TotalFB;
+
+    -- BUOC 3: Xu ly Voucher (Kiem tra logic Apply Voucher)
+    IF EXISTS (SELECT 1 FROM APPLY_FOR WHERE Booking_ID = @BookingID)
+    BEGIN
+        DECLARE @DiscountType NVARCHAR(20), @Percentage FLOAT, @FixedAmount DECIMAL(18, 2), @EndDate DATETIME;
+        SELECT TOP 1 
+            @DiscountType = V.DiscountType, 
+            @Percentage = V.Percentage, 
+            @FixedAmount = V.FixedAmount, 
+            @EndDate = V.EndDate
+        FROM APPLY_FOR AF JOIN VOUCHER V ON AF.Promo_Code = V.Promo_Code
+        WHERE AF.Booking_ID = @BookingID;
+
+        IF GETDATE() <= @EndDate 
+        BEGIN
+            IF @DiscountType = 'Percent' SET @Discount = @SubTotal * (@Percentage / 100.0);
+            ELSE IF @DiscountType = 'Fixed' SET @Discount = @FixedAmount;
+        END
+    END
+
+    -- BUOC 4: Chot gia cuoi cung
+    SET @FinalPrice = @SubTotal - @Discount;
+    IF @FinalPrice < 0 SET @FinalPrice = 0;
+
+    UPDATE BOOKING SET TotalPrice = @FinalPrice WHERE Booking_ID = @BookingID;
+END;
+GO
+\end{lstlisting}
+
+    \textbf{B. Các Trigger kích hoạt (Event Listeners):}
+    
+    \textit{Trigger 1: Cập nhật khi thay đổi Ghế (INCLUDE\_SEAT)}
+    \item \textbf{Mục đích:} Tự động tính toán và cập nhật lại tổng tiến (TotalPrice) trong bảng Booking bất cứ khi nào có thay đổi liên quan đến danh sách ghế ngồi danh sách ghế ngồi của đơn đặt vé. 
+\begin{lstlisting}
+CREATE TRIGGER trg_Update_Total_On_Seat
+ON INCLUDE_SEAT
+AFTER INSERT, DELETE, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @BookingList TABLE (ID VARCHAR(10));
+    INSERT INTO @BookingList SELECT Booking_ID FROM Inserted UNION SELECT Booking_ID FROM Deleted;
+
+    DECLARE @BookingID VARCHAR(10);
+    DECLARE cur CURSOR FOR SELECT ID FROM @BookingList;
+    OPEN cur; FETCH NEXT FROM cur INTO @BookingID;
+    WHILE @@FETCH_STATUS = 0 BEGIN
+        EXEC sp_Calculate_Booking_Total @BookingID;
+        FETCH NEXT FROM cur INTO @BookingID;
+    END
+    CLOSE cur; DEALLOCATE cur;
+END;
+GO
+\end{lstlisting}
+
+    \textit{Trigger 2: Cập nhật khi thay đổi F\&B (F\_B)}
+    \item \textbf{Mục đích:} Tự động tính toán và cập nhật lại tổng tiến (TotalPrice) trong bảng Booking bất cứ khi nào có thay đổi liên quan đến dịch vụ ăn uống (F\&B) của đơn đặt vé.
+\begin{lstlisting}
+CREATE TRIGGER trg_Update_Total_On_FB
+ON F_B
+AFTER INSERT, DELETE, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @BookingList TABLE (ID VARCHAR(10));
+    INSERT INTO @BookingList SELECT Booking_ID FROM Inserted UNION SELECT Booking_ID FROM Deleted;
+
+    DECLARE @BookingID VARCHAR(10);
+    DECLARE cur CURSOR FOR SELECT ID FROM @BookingList;
+    OPEN cur; FETCH NEXT FROM cur INTO @BookingID;
+    WHILE @@FETCH_STATUS = 0 BEGIN
+        EXEC sp_Calculate_Booking_Total @BookingID;
+        FETCH NEXT FROM cur INTO @BookingID;
+    END
+    CLOSE cur; DEALLOCATE cur;
+END;
+GO
+\end{lstlisting}
+
+    \textit{Trigger 3: Cập nhật khi áp dụng Voucher (APPLY\_FOR)}
+    \item \textbf{Mục đích:} Tự động tính toán và cập nhật lại tổng tiến (TotalPrice) trong bảng Booking bất cứ khi nào có thay đổi liên quan đến việc áp dụng hoặc gỡ bỏ mã giảm giá (Voucher) cho đơn đặt vé.
+\begin{lstlisting}
+CREATE TRIGGER trg_Update_Total_On_Voucher
+ON APPLY_FOR
+AFTER INSERT, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @BookingList TABLE (ID VARCHAR(10));
+    INSERT INTO @BookingList SELECT Booking_ID FROM Inserted UNION SELECT Booking_ID FROM Deleted;
+
+    DECLARE @BookingID VARCHAR(10);
+    DECLARE cur CURSOR FOR SELECT ID FROM @BookingList;
+    OPEN cur; FETCH NEXT FROM cur INTO @BookingID;
+    WHILE @@FETCH_STATUS = 0 BEGIN
+        EXEC sp_Calculate_Booking_Total @BookingID;
+        FETCH NEXT FROM cur INTO @BookingID;
+    END
+    CLOSE cur; DEALLOCATE cur;
+END;
+GO
+\end{lstlisting}
+
+    \item \textbf{4. Dữ liệu minh họa (Test Case):}
+\begin{lstlisting}
+-- 1. Tao mot ghe gia trong phong R001 de test
+IF NOT EXISTS (SELECT * FROM SEAT WHERE Room_ID = 'R001' AND SeatInfo = 'T1')
+    INSERT INTO SEAT (Room_ID, SeatInfo, SeatType) VALUES ('R001', 'T1', 'Standard');
+
+IF NOT EXISTS (SELECT * FROM SEAT WHERE Room_ID = 'R001' AND SeatInfo = 'T2')
+    INSERT INTO SEAT (Room_ID, SeatInfo, SeatType) VALUES ('R001', 'T2', 'Standard');
+
+-- 2. Tao mot Voucher test (Giam 10000)
+IF NOT EXISTS (SELECT * FROM VOUCHER WHERE Promo_Code = 'TEST_10PERCENT')
+    INSERT INTO VOUCHER (Promo_Code, StartDate, EndDate, DiscountType, FixedAmount)
+    VALUES ('TEST_10PERCENT', '2020-01-01', '2030-12-31', 'Fixed', 10000);
+\end{lstlisting}
+
+\begin{lstlisting}
+-- Tao moi
+INSERT INTO BOOKING (Booking_ID, UserID, TotalPrice, BookingTime) 
+VALUES ('BK_TEST', 'US001', 0, '2024-02-14 14:00:00');
+-- Them ghe 1
+INSERT INTO INCLUDE_SEAT (Room_ID, SeatInfo, Showtime_ID, Booking_ID, SeatStatus) 
+VALUES ('R001', 'T1', 'SH001', 'BK_TEST', 'Booked');
+
+-- Them ghe 2
+INSERT INTO INCLUDE_SEAT (Room_ID, SeatInfo, Showtime_ID, Booking_ID, SeatStatus) 
+VALUES ('R001', 'T2', 'SH001', 'BK_TEST', 'Booked');
+
+-- Kiem tra gia (Ky vong: 2 ve * 100k = 200,000)
+SELECT Booking_ID, TotalPrice AS [Gia Buoc 2 (200k)] FROM BOOKING WHERE Booking_ID = 'BK_TEST';
+\end{lstlisting}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/Gia tien 2 ghe.jpg}
+    \caption{Kết quả sau bước 2: TotalPrice = 200,000}
+\end{figure}
+
+\begin{lstlisting}
+-- Them 1 Combo gia 50,000
+INSERT INTO F_B (FB_ID, Booking_ID, FBName, Price) 
+VALUES ('TEST_FB', 'BK_TEST', N'Combo Test', 50000);
+
+-- Kiem tra gia (Ky vong: 200k ve + 50k nuoc = 250,000)
+SELECT Booking_ID, TotalPrice AS [Gia Buoc 3 (250k)] FROM BOOKING WHERE Booking_ID = 'BK_TEST';
+\end{lstlisting}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/Gia tien F_B.jpg}
+    \caption{Kết quả sau bước 3: TotalPrice = 250,000}
+\end{figure}
+
+\begin{lstlisting}
+-- Ap dung ma giam 10000
+INSERT INTO APPLY_FOR (Promo_Code, Booking_ID) 
+VALUES ('TEST_10PERCENT', 'BK_TEST');
+
+-- Kiem tra gia (Ky vong: 250k - 10000 = 240,000)
+SELECT Booking_ID, TotalPrice AS [Gia Buoc 4 (240k)] FROM BOOKING WHERE Booking_ID = 'BK_TEST';
+\end{lstlisting}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/Gia tien Voucher.jpg}
+    \caption{Kết quả sau bước 4: TotalPrice = 240,000}
+\end{figure}
+\end{itemize}
 % TODO
 
 \subsection{Thủ tục truy vấn}
