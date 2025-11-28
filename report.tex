@@ -1026,6 +1026,23 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    IF @StartDate IS NULL OR @EndDate IS NULL
+    BEGIN
+        ;THROW 51005, N'Loi: Cac tham so (@StartDate, @EndDate) la bat buoc.', 1;
+    END
+
+    IF @StartDate > @EndDate OR @StartDate > GETDATE() OR @EndDate > GETDATE()
+    BEGIN
+        ;THROW 51002, N'Loi: Thoi gian tra cuu khong hop le.', 1;
+    END
+
+    IF @MinSpending < 0
+    BEGIN
+        ;THROW 51001, N'Loi: Muc chi tieu toi thieu (@MinSpending) khong hop le.', 1;
+    END
+
+    PRINT N'Bat dau tao bao cao chi tieu...';
+
     SELECT 
         U.UserID,
         U.FirstName + ' ' + U.LastName AS "Ho Ten",
@@ -1045,9 +1062,20 @@ BEGIN
     GROUP BY 
         U.UserID, U.FirstName, U.LastName, U.Phone, U.Email
     HAVING 
-        SUM(B.TotalPrice) >= @MinSpending
+        SUM(B.TotalPrice) >= ISNULL(@MinSpending, 0)
     ORDER BY 
         "Tong Chi Tieu" DESC;
+
+    DECLARE @RowFound INT = @@ROWCOUNT;
+
+    IF @RowFound = 0
+    BEGIN
+        PRINT N'Thong bao: Khong tim thay du lieu.';
+    END
+    ELSE
+    BEGIN
+        PRINT N'Thanh cong: Da tim thay ' + CAST(@RowFound AS NVARCHAR(10)) + N' khach hang.';
+    END
 END;
 \end{lstlisting}
 \textbf{Giải thích thủ tục:}
@@ -1073,6 +1101,63 @@ Cuối cùng, thủ tục trả về danh sách các kết quả thỏa mãn cá
 Dữ liệu trả về có thể được sử dụng để áp dụng các chương trình tri ân khách hàng đặc biệt dựa trên mức chi tiêu mà khách hàng đã thực hiện, 
 đồng thời cũng là công cụ hữu hiệu đối với các cấp quản lý khi đưa ra các quyết định quan trọng của hệ thống,
 
+\textbf{Xử lý ngoại lệ}
+\begin{itemize}
+    \item[-] Nếu người dùng không truyền tham số @StartDate, @EndDate, thủ tục trả về lỗi và không thực thi truy vấn.
+    \item[-] Nếu các tham số @StartDate, @EndDate không hợp lệ (Vd: @StartDate > @EndDate), thủ tục trả về lỗi và không thực thi truy vấn.
+    \item[-] Nếu tham số @MinSpending được truyền vào không hợp lệ (Vd: số ấm), thủ tục trả về lỗi và không thực thi truy vấn.
+\end{itemize}
+
+\textbf{Testing}
+\begin{lstlisting}
+-- Test 1: Truy suat thong tin hop le
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = '2024-01-01', 
+    @EndDate = '2024-12-31', 
+    @MinSpending = 200000;
+
+-- Test 2: Truyen tham so khong hop le
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = NULL,
+    @EndDate = NULL,
+    @MinSpending = NULL;
+
+-- Test 3: Tham so @MinSpending khong hop le
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = '2024-01-01', 
+    @EndDate = '2024-12-31', 
+    @MinSpending = -1;
+
+-- Test 4: Tham so @MinSpending khong duoc truyen, gia tri mac dinh la 0
+EXEC sp_ReportUserSpendingByDate 
+    @StartDate = '2024-01-01', 
+    @EndDate = '2024-12-31', 
+    @MinSpending = NULL;
+\end{lstlisting}
+\textbf{Kết quả}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test1_1.png}
+    \includegraphics[width=\textwidth]{Images/TT1_Test1_2.png}
+    \caption{Kết quả Test 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test2.png}
+    \caption{Kết quả Test 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test3.png}
+    \caption{Kết quả Test 3}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT1_Test4_1.png}
+    \includegraphics[width=\textwidth]{Images/TT1_Test4_2.png}
+    \caption{Kết quả Test 4}
+\end{figure}
+
 \subsubsection{Thủ tục \texttt{sp\_SearchShowtime}}
 \begin{lstlisting}
 CREATE PROCEDURE sp_SearchShowtime
@@ -1081,6 +1166,20 @@ CREATE PROCEDURE sp_SearchShowtime
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @MovieTitle IS NULL OR LTRIM(RTRIM(@MovieTitle)) = '' OR @SearchDate IS NULL
+    BEGIN
+        ;THROW 51005, N'Loi: Cac tham so (@MovieTitle, @SearchDate) la bat buoc.', 1;
+    END
+
+    IF @SearchDate > GETDATE()
+    BEGIN
+        ;THROW 51003, N'Loi: Ngay tim kiem (@SearchDate) khong hop le.', 1;
+    END
+
+    PRINT N'Tu khoa phim: ' + @MovieTitle;
+    PRINT N'Thoi gian tu ngay: ' + CONVERT(NVARCHAR, @SearchDate, 103);
+    PRINT N'Dang tim kiem lich chieu...';
 
     SELECT 
         M.Title AS "Ten Phim",
@@ -1104,6 +1203,17 @@ BEGIN
         M.Title ASC,
         S.StartTime ASC,
         C.Name ASC;
+    
+    DECLARE @RowFound INT = @@ROWCOUNT;
+
+    IF @RowFound = 0
+    BEGIN
+        PRINT N'Thong bao: Khong tim thay suat chieu nao phu hop.';
+    END
+    ELSE
+    BEGIN
+        PRINT N'Thanh cong: Tim thay ' + CAST(@RowFound AS NVARCHAR(10)) + N' suat chieu.';
+    END
 END;
 \end{lstlisting}
 \textbf{Giải thích thủ tục:}
@@ -1126,4 +1236,41 @@ Từ danh sách đã kết nối, thủ tục tiến hành các bộ lọc:
 \end{itemize}
 
 Cuối cùng, thủ tục trả về danh sách các kết quả thỏa mãn các bộ lọc, thông qua thao tác sắp xếp với mức ưu tiên cao nhất cho tên phim, tiếp theo là thời gian suất chiếu và cuối cùng theo tên rạp.
+
+\textbf{Xử lý ngoại lệ}
+\begin{itemize}
+    \item[-] Nếu người dùng không truyền tham số @MovieTitle, @SearchDate hoặc truyền dữ liệu rỗng, thủ tục trả về lỗi và không thực thi truy vấn.
+    \item[-] Nếu tham số @SearchDate không hợp lệ (Vd: @SearchDate > GETDATE()), thủ tục trả về lỗi và không thực thi truy vấn.
+\end{itemize}
+
+\textbf{Testing}
+\begin{lstlisting}
+-- Test 1: Truy xuat thong tin hop le
+EXEC sp_SearchShowtime @MovieTitle = N'Lat Mat', @SearchDate = '2024-01-01';
+
+-- Test 2: Truyen tham so khong hop le
+EXEC sp_SearchShowtime @MovieTitle = N'', @SearchDate = '';
+
+-- Test 3: Thoi gian truy xuat khong hop le
+EXEC sp_SearchShowtime @MovieTitle = N'Mai', @SearchDate = '2026-01-01';
+\end{lstlisting}
+
+\textbf{Kết quả}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT2_Test1_1.png}
+    \includegraphics[width=\textwidth]{Images/TT2_Test1_2.png}
+    \caption{Kết quả Test 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT2_Test2.png}
+    \caption{Kết quả Test 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/TT2_Test3.png}
+    \caption{Kết quả Test 3}
+\end{figure}
+
 \end{document}
