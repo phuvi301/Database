@@ -1893,4 +1893,109 @@ EXEC sp_SearchShowtime @MovieTitle = N'Mai', @SearchDate = '2026-01-01';
     \caption{Kết quả Test 3}
 \end{figure}
 
+\subsubsection{Thủ tục \texttt{sp\_SearchUsersByBookingCount}}
+\begin{lstlisting}
+CREATE PROCEDURE sp_SearchUsersByBookingCount
+    @Keyword NVARCHAR(100),
+    @MaxBookingCount INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @MaxBookingCount < 0
+    BEGIN
+        ;THROW 51001, N'Loi: So luong don hang toi da khong duoc am.', 1;
+    END
+
+    SELECT 
+        U.UserID,
+        ISNULL(U.FirstName, '') + ' ' + ISNULL(U.LastName, '') AS FullName,
+        U.Email,
+        U.Phone,
+        COUNT(B.Booking_ID) AS TotalBookings,
+        ISNULL(SUM(B.TotalPrice), 0) AS TotalSpent
+    FROM 
+        [USER] U
+    LEFT JOIN 
+        BOOKING B ON U.UserID = B.UserID
+    LEFT JOIN 
+        PAYMENT P ON B.PaymentID = P.Payment_ID 
+    WHERE
+        (@Keyword IS NULL OR U.Email LIKE '%' + @Keyword + '%' OR U.FirstName LIKE '%' + @Keyword + '%')
+    GROUP BY
+        U.UserID, U.FirstName, U.LastName, U.Email, U.Phone
+    HAVING 
+        COUNT(B.Booking_ID) <= ISNULL(@MaxBookingCount, 999999)
+    ORDER BY 
+        TotalBookings ASC, TotalSpent DESC;
+
+    DECLARE @RowFound INT = @@ROWCOUNT;
+    IF @RowFound = 0
+        PRINT N'Khong tim thay khach hang nao.';
+    ELSE
+        PRINT N'Tim thay ' + CAST(@RowFound AS NVARCHAR(10)) + N' khach hang.';
+END;
+\end{lstlisting}
+\textbf{Giải thích thủ tục:}
+
+\texttt{sp\_SearchUsersByBookingCount} là thủ tục được thiết kế truy xuất danh sách người dùng ít hoạt động. 
+Nó giúp quản lý thu thập thông tin phục vụ các chiến dịch Marketing, kích cầu tiêu dùng và ưu đãi cho các khách hàng đã dần lãng quên hệ thống.
+
+Thủ tục yêu cầu 2 thông tin:
+\begin{itemize}
+    \item[-] @Keyword: Từ khóa tìm kiếm theo tên (có thể để trống).
+    \item[-] @MaxBookingCount: Số lượng đơn hàng tối đa của một user.
+\end{itemize}
+
+Thủ tục tiến hành kết nối các bảng USER và BOOKING, PAYMENT. Từ đó, kết quả trả về sẽ bao gồm Thông tin cá nhân, Tổng số đơn hàng và tổng chi tiêu của từng cá nhân.
+
+Từ danh sách đã kết nối, thủ tục tiến hành các bộ lọc:
+\begin{itemize}
+    \item[-] Lọc tên USER: Thủ tục áp dụng phép tính gần đúng để tìm tất cả các USER có tên gần giống với tham số truyền vào.
+    \item[-] Lọc theo tổng số đơn đã đặt: Thủ tục tiến hành gộp nhóm theo thông tin cá nhân và tính toán tổng số đơn hàng đã đặt, lọc bỏ theo số lượng đơn hàng tối đa từ tham số truyền vào.
+\end{itemize}
+
+Cuối cùng, thủ tục trả về danh sách các kết quả thỏa mãn các bộ lọc, thông qua thao tác sắp xếp tổng số đơn hàng tăng dần và tổng chi tiêu giảm dần.
+
+\textbf{Xử lý ngoại lệ}
+\begin{itemize}
+    \item[-] Nếu người dùng không truyền tham số @Keyword, thủ tục sẽ bỏ qua không lọc và vẫn tiếp tục truy vấn.
+    \item[-] Nếu tham số @MaxBookingCount âm, thủ tục sẽ báo lỗi và ngừng truy vấn ngay lập tức.
+    \item[-] Nếu tham số @MaxBookingCount không được truyền vào, thủ tục sẽ sử dụng giá trị mặc định là 99999 và tiếp tục truy vấn.
+\end{itemize}
+
+\textbf{Testing}
+\begin{lstlisting}
+-- Test 1: Truy suat thong tin hop le
+EXEC sp_SearchUsersByBookingCount 
+    @Keyword="Le",
+    @MaxBookingCount=10;
+-- Test 2: Khong truyen tham so
+EXEC sp_SearchUsersByBookingCount 
+    @Keyword=NULL,
+    @MaxBookingCount=NULL
+-- Test 3: Tham so @MaxBookingCount khong hop le
+EXEC sp_SearchUsersByBookingCount 
+    @Keyword="V",
+    @MaxBookingCount=-2
+\end{lstlisting}
+
+\textbf{Kết quả}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/TT3_Test1_1.png}
+    \includegraphics[width=0.75\textwidth]{Images/TT3_Test1_2.png}
+    \caption{Kết quả Test 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/TT3_Test2_1.png}
+    \includegraphics[width=0.75\textwidth]{Images/TT3_Test2_2.png}
+    \caption{Kết quả Test 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/TT3_Test3.png}
+    \caption{Kết quả Test 3}
+\end{figure}
+
 \end{document}
