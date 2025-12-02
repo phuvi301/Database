@@ -1998,4 +1998,275 @@ EXEC sp_SearchUsersByBookingCount
     \caption{Kết quả Test 3}
 \end{figure}
 
+\subsection{Hàm}
+\subsubsection{Hàm \texttt{fn\_GetMovieRevenue}}
+\begin{lstlisting}[language=SQL]
+CREATE OR ALTER FUNCTION fn_GetMovieRevenue
+(
+    @MovieID VARCHAR(10)
+)
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+    DECLARE @Result NVARCHAR(MAX) = N'';
+    DECLARE @MovieTitle NVARCHAR(100);
+    DECLARE @TotalRevenue DECIMAL(18, 2) = 0;
+    DECLARE @ShowtimeCount INT = 0;
+
+    IF @MovieID IS NULL
+        RETURN N'Lop: MovieID khong duoc NULL';
+
+    SELECT @MovieTitle = Title FROM MOVIE WHERE Movie_ID = @MovieID;
+    IF @MovieTitle IS NULL
+        RETURN N'Loi: Khong tim thay phim voi ID: ' + @MovieID;
+
+    SET @Result = N'Phim: ' + @MovieTitle + CHAR(13) + CHAR(10);
+
+    DECLARE @ShowtimeID VARCHAR(10);
+    DECLARE @StartTime DATETIME;
+    DECLARE @Revenue DECIMAL(18, 2);
+
+    DECLARE showtime_cursor CURSOR FOR
+    SELECT S.Showtime_ID, S.StartTime
+    FROM SHOWTIME S
+    WHERE S.Movie_ID = @MovieID
+    ORDER BY S.StartTime;
+
+    OPEN showtime_cursor;
+    FETCH NEXT FROM showtime_cursor INTO @ShowtimeID, @StartTime;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SELECT @Revenue = ISNULL(SUM(B.TotalPrice), 0)
+        FROM BOOKING B
+        JOIN INCLUDE_SEAT I ON B.Booking_ID = I.Booking_ID
+        WHERE I.Showtime_ID = @ShowtimeID;
+
+        SET @TotalRevenue = @TotalRevenue + @Revenue;
+        SET @ShowtimeCount = @ShowtimeCount + 1;
+
+        SET @Result = @Result + 
+            N'  Suat ' + CAST(@ShowtimeCount AS NVARCHAR) + 
+            N' (' + CONVERT(NVARCHAR, @StartTime, 103) + N'): ' + 
+            FORMAT(@Revenue, 'N0') + N' VND' + CHAR(13) + CHAR(10);
+
+        FETCH NEXT FROM showtime_cursor INTO @ShowtimeID, @StartTime;
+    END
+
+    CLOSE showtime_cursor;
+    DEALLOCATE showtime_cursor;
+
+    SET @Result = @Result + 
+        N'---' + CHAR(13) + CHAR(10) +
+        N'Tong doanh thu: ' + FORMAT(@TotalRevenue, 'N0') + N' VND' + CHAR(13) + CHAR(10) +
+        N'Tong so suat chieu: ' + CAST(@ShowtimeCount AS NVARCHAR);
+
+    RETURN @Result;
+END;
+\end{lstlisting}
+\textbf{Giải thích hàm:}
+
+Hàm \texttt{fn\_GetMovieRevenue} được thiết kế để tính toán doanh thu chi tiết của một bộ phim dựa trên tất cả các suất chiếu của phim đó. Không chỉ trả về tổng doanh thu, hàm còn cung cấp báo cáo chi tiết từng suất chiếu dưới dạng chuỗi văn bản có cấu trúc.
+
+Hàm yêu cầu 1 tham số duy nhất:
+@MovieID là mã định danh duy nhất của bộ phim cần phân tích 
+
+Hàm truy vấn thông tin cơ bản của phim từ bảng MOVIE.
+Sau đó khởi tạo con trỏ, truy vấn danh sách tất cả suất chiếu của phim (sắp xếp theo thời gian) 
+và sử dụng vòng lặp WHILE để duyệt qua từng suất chiếu, thực hiện:
+
+\begin{itemize}
+    \item[-] Tính doanh thu suất chiếu: Truy vấn tổng giá trị các vé đã bán cho suất chiếu hiện tại.
+    \item[-] Cộng dồn tổng doanh thu: Tích lũy vào biến tổng doanh thu của phim.
+    \item[-] Định dạng thông tin: Chuyển đổi dữ liệu thành chuỗi mô tả có cấu trúc.
+    \item[-] Xây dựng báo cáo chi tiết: Thêm thông tin suất chiếu vào chuỗi kết quả.
+\end{itemize}
+\textbf{Xử lý ngoại lệ:}
+\begin{itemize}
+    \item[-] Nếu người dùng không truyền tham số @MovieID hoặc không thể tìm thấy phim với @MovieID tương ứng, hàm sẽ trả về thông báo lỗi cụ thể.
+\end{itemize}
+
+\textbf{Testing}
+
+\begin{lstlisting}
+-- Test 1: MovieID hop le
+SELECT dbo.fn_GetMovieRevenue('MV001') AS MovieRevenueDetail;
+
+-- Test 2: MovieID khong ton tai
+SELECT dbo.fn_GetMovieRevenue('MV999') AS MovieRevenueDetail;
+
+-- Test 3: MovieID NULL
+SELECT dbo.fn_GetMovieRevenue(NULL) AS MovieRevenueDetail;
+\end{lstlisting}
+
+\textbf{Kết quả}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/H1_Test1_1.png}
+    \caption{Kết quả Test 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/H1_Test1_2.png}
+    \caption{Kết quả Test 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/H1_Test1_3.png}
+    \caption{Kết quả Test 3}
+\end{figure}
+
+\subsubsection{Hàm \texttt{fn\_GetRoomOccupancyRate}}
+\begin{lstlisting}
+    CREATE OR ALTER FUNCTION fn_GetRoomOccupancyRate
+(
+    @RoomID VARCHAR(10),
+    @StartDate DATETIME,
+    @EndDate DATETIME
+)
+RETURNS DECIMAL(5, 2)
+AS
+BEGIN
+    DECLARE @OccupancyRate DECIMAL(5, 2) = 0;
+    DECLARE @TotalSeats INT;
+    DECLARE @TotalShowtimes INT = 0;
+    DECLARE @TotalBookedSeats INT = 0;
+    
+    DECLARE @ShowtimeID VARCHAR(10);
+    DECLARE @BookedSeats INT;
+    
+    IF @RoomID IS NULL OR LTRIM(RTRIM(@RoomID)) = ''
+    BEGIN
+        RETURN -1; 
+    END
+    
+    IF @StartDate IS NULL OR @EndDate IS NULL
+    BEGIN
+        RETURN -2; 
+    END
+    
+    IF @StartDate > @EndDate
+    BEGIN
+        RETURN -3; 
+    END
+    
+    IF NOT EXISTS (SELECT 1 FROM ROOM WHERE Room_ID = @RoomID)
+    BEGIN
+        RETURN -4; 
+    END
+    
+    SELECT @TotalSeats = Capacity 
+    FROM ROOM 
+    WHERE Room_ID = @RoomID;
+    
+    IF @TotalSeats = 0
+    BEGIN
+        RETURN 0; 
+    END
+    
+    DECLARE showtime_cursor CURSOR FOR
+    SELECT Showtime_ID
+    FROM SHOWTIME
+    WHERE Room_ID = @RoomID
+        AND StartTime BETWEEN @StartDate AND @EndDate
+    ORDER BY StartTime;
+    
+    OPEN showtime_cursor;
+    FETCH NEXT FROM showtime_cursor INTO @ShowtimeID;
+    
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SET @TotalShowtimes = @TotalShowtimes + 1;
+        
+        SELECT @BookedSeats = COUNT(*)
+        FROM INCLUDE_SEAT
+        WHERE Showtime_ID = @ShowtimeID
+            AND SeatStatus IN ('Booked', 'Sold');
+        
+        SET @TotalBookedSeats = @TotalBookedSeats + @BookedSeats;
+        
+        FETCH NEXT FROM showtime_cursor INTO @ShowtimeID;
+    END
+    
+    CLOSE showtime_cursor;
+    DEALLOCATE showtime_cursor;
+    
+    IF @TotalShowtimes > 0
+    BEGIN
+        SET @OccupancyRate = (CAST(@TotalBookedSeats AS DECIMAL(18, 2)) / 
+                              (CAST(@TotalSeats AS DECIMAL(18, 2)) * @TotalShowtimes)) * 100;
+    END
+    ELSE
+    BEGIN
+        SET @OccupancyRate = 0;
+    END
+    
+    RETURN @OccupancyRate;
+END;
+\end{lstlisting}
+\textbf{Giải thích hàm:}
+
+\texttt{fn\_GetRoomOccupancyRate} là hàm được thiết kế để tính toán tỷ lệ lấp đầy ghế của một phòng chiếu phim trong một khoảng thời gian cụ thể. Tỷ lệ này là chỉ số quan trọng đánh giá hiệu quả sử dụng không gian và khả năng thu hút khán giả của phòng chiếu.
+
+Hàm yêu cầu 3 tham số:
+
+\begin{itemize}
+    \item[-] @RoomID: Mã định danh của phòng chiếu cần phân tích.
+    \item[-] @StartDate: Ngày bắt đầu khoảng thời gian phân tích.
+    \item[-] @EndDate: Ngày kết thúc khoảng thời gian phân tích.  
+\end{itemize}
+
+Hàm truy vấn tổng số ghế (Capacity) từ bảng ROOM và trả về 0 ngay lập tức nếu phòng không có ghế (Capacity = 0).
+
+Hàm sử dụng con trỏ và vòng lặp WHILE để duyệt tuần tự qua tất cả các suất chiếu của phòng:
+
+\begin{itemize}
+    \item[-] Tăng bộ đếm suất chiếu: Theo dõi tổng số suất chiếu trong khoảng thời gian.
+    \item[-] Đếm ghế đã đặt: Truy vấn số ghế có trạng thái 'Booked' hoặc 'Sold' cho mỗi suất chiếu.
+    \item[-] Cộng dồn số ghế: Tích lũy tổng số ghế đã đặt qua tất cả suất chiếu.
+\end{itemize}
+
+Sau khi thu thập đầy đủ dữ liệu hàm tính toán tỉ lệ lấp đầy theo công thức:
+
+Occupancy Rate = (Tổng số ghế đã đặt / (Sức chứa phòng × Tổng số suất chiếu)) × 100%
+
+\textbf{Xử lý ngoại lệ:}
+\begin{itemize}
+    \item[-] Nếu người dùng không truyền tham số @RoomID, @StartDate hoặc @EndDate, hàm sẽ trả về mã lỗi tương ứng (-1 cho RoomID và -2 cho StartDate và EndDate).
+    \item[-] Nếu EndDate bé hơn StartDate thì hàm sẽ trả về mã lỗi là -3.
+    \item[-] Nếu RoomID không tồn tại thì hàm sẽ trả về mã lỗi là -4.
+\end{itemize}  
+
+\textbf{Testing}
+
+\begin{lstlisting}
+-- Test 1: Tinh ti le lap day cho phong hop le
+DECLARE @Rate DECIMAL(5, 2);
+SET @Rate = dbo.fn_GetRoomOccupancyRate('R001', '2024-01-01', '2024-12-31');
+SELECT @Rate AS [Occupancy Rate (%)];
+
+-- Test 2: RoomID khong ton tai
+SELECT dbo.fn_GetRoomOccupancyRate('R999', '2024-01-01', '2024-12-31') AS [Result];
+
+-- Test 3: Ngay khong hop le
+SELECT dbo.fn_GetRoomOccupancyRate('R001', '2024-12-31', '2024-01-01') AS [Result];
+\end{lstlisting}
+
+\textbf{Kết quả}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Images/H2_Test1_1.png}
+    \caption{Kết quả Test 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Images/H2_Test1_2.png}
+    \caption{Kết quả Test 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Images/H2_Test1_3.png}
+    \caption{Kết quả Test 3}
+\end{figure}
+
 \end{document}
