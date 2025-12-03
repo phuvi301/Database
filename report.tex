@@ -1,3 +1,4 @@
+
 % FORMAT AND PACKAGES
 % {
 \documentclass[a4paper]{article}
@@ -64,7 +65,20 @@
   % chỉnh cỡ chữ thành 10
   \footnotesize
 }
-
+\lstdefinelanguage{JavaScript}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break, try, const, let},
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
 % Cấu hình style cho SQL
 \lstdefinestyle{sqlstyle}{
     language=SQL,
@@ -1997,5 +2011,140 @@ EXEC sp_SearchUsersByBookingCount
     \includegraphics[width=0.75\textwidth]{Images/TT3_Test3.png}
     \caption{Kết quả Test 3}
 \end{figure}
+\section{Hiện thực ứng dụng }
+\cach Nhóm đã phát triển một ứng dụng web quản lý rạp chiếu phim để minh họa việc kết nối và tương tác với cơ sở dữ liệu SQL Server. Ứng dụng tập trung vào các thao tác dữ liệu thông qua Stored Procedures và xử lý các ràng buộc nghiệp vụ.
 
+\subsection{Kiến trúc hệ thống}
+
+\cach Hệ thống tuân theo mô hình Client-Server 3 lớp:
+
+\begin{itemize}
+    \item \textbf{Database Layer (SQL Server):} Lưu trữ dữ liệu, đảm bảo toàn vẹn dữ liệu thông qua Constraints, Triggers và cung cấp logic nghiệp vụ qua Stored Procedures.
+    \item \textbf{Backend Layer (Node.js + Express):} Cung cấp RESTful API. Sử dụng thư viện \texttt{mssql} để kết nối Database, thực thi các thủ tục lưu trữ và xử lý logic trung gian (Authentication, Validation).
+    \item \textbf{Frontend Layer (Next.js):} Giao diện người dùng (UI) được xây dựng bằng React, tương tác với Backend qua HTTP Requests (Axios/Fetch).
+\end{itemize}
+
+
+
+\begin{figure}[H]
+    \centering
+    \framebox{\parbox{0.8\textwidth}{\centering
+        \vspace{1.5cm}
+        \textbf{[Client (Next.js) $\leftrightarrow$ API (Express) $\leftrightarrow$ Database (SQL Server)]}
+        \vspace{1.5cm}
+    }}
+    \caption{Mô hình kiến trúc ứng dụng}
+    \label{fig:architecture}
+\end{figure}
+
+\subsection{Kết nối Cơ sở dữ liệu}
+
+Kết nối được thiết lập trong file \texttt{db.js} sử dụng biến môi trường để bảo mật.
+
+\begin{lstlisting}[language=JavaScript]
+import sql from "mssql";
+
+const sqlConfig = {
+    user: process.env.DB_USER,      
+    password: process.env.DB_PASSWORD, 
+    database: "BTL_DB",             
+    server: process.env.DB_SERVER,  
+    port: +process.env.DB_PORT,
+    options: {
+        encrypt: true,
+        trustServerCertificate: false
+    }
+};
+
+const connectDB = async () => {
+    try {
+        await sql.connect(sqlConfig);
+        console.log("Microsoft SQL server connected");
+    } catch (error) {
+        console.error("Connection failed:", error);
+    }
+};
+export default { connectDB };
+\end{lstlisting}
+\subsection{Hiện thực Backend và Frontend}
+
+\subsubsection{Quản lý Người dùng (User Management)}
+
+\cach Đây là chức năng chính minh họa cho việc Thêm/Xóa/Sửa dữ liệu (Câu 3.1) và Hiển thị danh sách/Xử lý lỗi (Câu 3.2).
+
+\textbf{1. Backend API (Controller)}
+
+File \texttt{userController.js} xử lý các request từ client và gọi các Stored Procedure tương ứng: \texttt{sp\_InsertUser}, \texttt{sp\_UpdateUser}, \texttt{sp\_DeleteUser}.
+
+\begin{lstlisting}[language=JavaScript]
+// 1. Them nguoi dung (Goi sp_InsertUser)
+export const createUser = async (req, res) => {
+    const { UserID, FirstName, LastName, Email, Phone, Password, ... } = req.body;
+    try {
+        const request = new sql.Request();
+        request.input("UserID", sql.VarChar(10), UserID);
+        // ... mapping cac tham so khac
+        
+        // Thuc thi thu tuc
+        await request.execute("sp_InsertUser");
+        res.status(201).json({ message: "Them nguoi dung thanh cong!" });
+    } catch (error) {
+        // Bat loi vi pham rang buoc (VD: UserID da ton tai)
+        res.status(400).json({ message: error.message });
+    }
+};
+// 2. Cap nhat nguoi dung (Goi sp_UpdateUser)
+export const updateUser = async (req, res) => {
+    const { id } = req.params; 
+    const { NewEmail, NewPhone, NewPassword } = req.body;
+
+    try {
+        const request = new sql.Request();
+        request.input("UserID", sql.VarChar(10), id);
+        request.input("NewEmail", sql.VarChar(100), NewEmail);
+        request.input("NewPhone", sql.VarChar(15), NewPhone);
+        request.input("NewPassword", sql.VarChar(50), NewPassword);
+
+        await request.execute("sp_UpdateUser");
+
+        res.status(200).json({ message: "Cap nhat thanh cong!" });
+    } catch (error) {
+        console.error("SQL Error:", error.message);
+        res.status(400).json({ message: error.message });
+    }
+};
+// 3. Xoa nguoi dung (Goi sp_DeleteUser)
+export const deleteUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const request = new sql.Request();
+        request.input("UserID", sql.VarChar(10), id);
+        
+        await request.execute("sp_DeleteUser");
+        res.status(200).json({ message: "Xoa thanh cong!" });
+    } catch (error) {
+        // Bat loi khoa ngoai (VD: User da mua ve)
+        res.status(400).json({ message: error.message });
+    }
+};
+\end{lstlisting}
+
+\textbf{2. Frontend (Giao diện và Logic)}
+
+Giao diện \texttt{/users} được thiết kế để đáp ứng các yêu cầu:
+\begin{itemize}
+    \item \textbf{Danh sách dữ liệu:} Hiển thị bảng User với đầy đủ thông tin.
+    \item \textbf{Thêm/Sửa trên cùng giao diện:} Form tự động chuyển đổi trạng thái. Khi sửa, các trường không được phép thay đổi (như UserID, Tên) sẽ bị khóa hoặc ẩn đi, tuân thủ logic của \texttt{sp\_UpdateUser}.
+    \item \textbf{Xử lý lỗi logic:} Các lỗi từ Database (như nhập mật khẩu < 8 ký tự, xóa user đang có vé) được hiển thị rõ ràng cho người dùng thông qua thông báo (Toast/Alert).
+\end{itemize}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/fe1.jpg}
+    \includegraphics[width=0.9\textwidth]{Images/fe3.jpg}
+    \includegraphics[width=0.9\textwidth]{Images/fe2.jpg}
+    \caption{Giao diện Quản lý Người dùng}
+\end{figure}
 \end{document}
