@@ -2061,7 +2061,7 @@ BEGIN
 
         SET @Result = @Result + 
             N'  Suat ' + CAST(@ShowtimeCount AS NVARCHAR) + 
-            N' (' + CONVERT(NVARCHAR, @StartTime, 120) + N'): ' + 
+            N' (' + FORMAT(@StartTime, 'dd/MM/yyyy HH:mm:ss') + N'): ' + 
             FORMAT(@Revenue, 'N0') + N' VND' + CHAR(13) + CHAR(10);
 
         FETCH NEXT FROM showtime_cursor INTO @ShowtimeID, @StartTime;
@@ -2121,18 +2121,18 @@ SELECT dbo.fn_GetMovieRevenue(NULL) AS MovieRevenueDetail;
 \end{figure}
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\textwidth]{Images/H1_Test1_2.png}
+	\includegraphics[width=0.8\textwidth]{Images/H1_Test1_2.png}
 	\caption{Kết quả Test 2}
 \end{figure}
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\textwidth]{Images/H1_Test1_3.png}
+	\includegraphics[width=0.8\textwidth]{Images/H1_Test1_3.png}
 	\caption{Kết quả Test 3}
 \end{figure}
 
 \subsubsection{Hàm \texttt{fn\_GetRoomOccupancyRate}}
 \begin{lstlisting}
-    CREATE OR ALTER FUNCTION fn_GetRoomOccupancyRate
+CREATE OR ALTER FUNCTION fn_GetRoomOccupancyRate
 (
     @RoomID VARCHAR(10),
     @StartDate DATETIME,
@@ -2150,33 +2150,24 @@ BEGIN
     DECLARE @BookedSeats INT;
     
     IF @RoomID IS NULL OR LTRIM(RTRIM(@RoomID)) = ''
-    BEGIN
         RETURN -1; 
-    END
     
     IF @StartDate IS NULL OR @EndDate IS NULL
-    BEGIN
         RETURN -2; 
-    END
     
     IF @StartDate > @EndDate
-    BEGIN
         RETURN -3; 
-    END
     
     IF NOT EXISTS (SELECT 1 FROM ROOM WHERE Room_ID = @RoomID)
-    BEGIN
         RETURN -4; 
-    END
+
     
     SELECT @TotalSeats = Capacity 
     FROM ROOM 
     WHERE Room_ID = @RoomID;
     
     IF @TotalSeats = 0
-    BEGIN
         RETURN 0; 
-    END
     
     DECLARE showtime_cursor CURSOR FOR
     SELECT Showtime_ID
@@ -2206,14 +2197,10 @@ BEGIN
     DEALLOCATE showtime_cursor;
     
     IF @TotalShowtimes > 0
-    BEGIN
         SET @OccupancyRate = (CAST(@TotalBookedSeats AS DECIMAL(18, 2)) / 
                               (CAST(@TotalSeats AS DECIMAL(18, 2)) * @TotalShowtimes)) * 100;
-    END
     ELSE
-    BEGIN
         SET @OccupancyRate = 0;
-    END
     
     RETURN @OccupancyRate;
 END;
