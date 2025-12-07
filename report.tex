@@ -2419,7 +2419,7 @@ Giao diện \texttt{/users} được thiết kế để đáp ứng các yêu c�
 
 \subsubsection{Thống kê và Quản lý Khách hàng (User Statistics \& Management)}
 
-\cach Chức năng này minh họa cho yêu cầu Tìm kiếm snâng cao và Thống kê tổng hợp.
+\cach Chức năng này minh họa cho yêu cầu Tìm kiếm nâng cao và Thống kê tổng hợp.
 Hệ thống cho phép lọc người dùng dựa trên tên và ố lượng đơn hàng đã đặt, đồng thời tính toán tổng chi tiêu (sử dụng kết hợp \texttt{COUNT}, \texttt{SUM} và \texttt{HAVING}).
 
 \textbf{1. Backend API (Controller)}
@@ -2470,5 +2470,48 @@ Giao diện \texttt{/admin/customer-filter} được thiết kế tập trung tr
 	\includegraphics[width=0.9\textwidth]{Images/fe5.jpg}
 	\caption{Giao diện Thống kê và Quản lý Khách hàng}
 \end{figure}
+
+\subsubsection{Thống kê doanh thu phim (Movie's revenue statistics)}
+
+\textbf{1. Backend API (Controller)}
+
+File \texttt{revenueController.js} là module chịu trách nhiệm xử lý các yêu cầu liên quan đến doanh thu phim, bao gồm:
+\begin{itemize}
+    \item Hàm \texttt{revenueDetail}: Lấy chi tiết doanh thu của một phim theo ID, dưới dạng chuỗi mô tả đầy đủ được trả về từ hàm SQL \texttt{fn\_GetMovieRevenue}.
+    \item Hàm \texttt{moviesRevenue}: Lấy doanh thu của toàn bộ phim và chuyển đổi sang dạng JSON chuẩn cho frontend.
+\end{itemize}
+
+\begin{lstlisting}[language=JavaScript]
+const RevenueController = {
+    revenueDetail: async (req, res) => {
+        try {
+            const movieId = req.params.id;
+            const request = new sql.Request();
+            const result = await request.input("MovieID", sql.VarChar(10), movieId).query(`SELECT dbo.fn_GetMovieRevenue(@MovieID) AS Revenue`);
+            res.status(200).json({ detail: result.recordset[0].Revenue });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+
+    moviesRevenue: async (req, res) => {
+        try {
+            const request = new sql.Request();
+            const result = await request.query(`SELECT 
+                M.Movie_ID AS id,
+                dbo.fn_GetMovieRevenue(M.Movie_ID) AS revenueDetail
+            FROM MOVIE M
+            ORDER BY M.Movie_ID;
+            `)
+            res.status(200).json({ data: result.recordset.map(parseRevenueDetail) }); // ham parseRevenueDetail chuyen chuoi tra ve tu fn_GetMovieRevenue thanh JSON cho fe
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+};
+\end{lstlisting}
+
 
 \end{document}
