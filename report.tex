@@ -2061,7 +2061,7 @@ BEGIN
 
         SET @Result = @Result + 
             N'  Suat ' + CAST(@ShowtimeCount AS NVARCHAR) + 
-            N' (' + CONVERT(NVARCHAR, @StartTime, 103) + N'): ' + 
+            N' (' + CONVERT(NVARCHAR, @StartTime, 120) + N'): ' + 
             FORMAT(@Revenue, 'N0') + N' VND' + CHAR(13) + CHAR(10);
 
         FETCH NEXT FROM showtime_cursor INTO @ShowtimeID, @StartTime;
