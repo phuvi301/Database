@@ -2513,5 +2513,46 @@ const RevenueController = {
 };
 \end{lstlisting}
 
+\textbf{2. Frontend (Giao diện và Logic)}
+
+Giao diện \texttt{/admin/revenue} được thiết kế theo phong cách tương tự hai màn hình quản lý người dùng, nhưng tập trung hoàn toàn vào việc trực quan hóa doanh thu phim. Màn hình này giúp giảng viên có thể kiểm tra trực tiếp kết quả hàm \texttt{fn\_GetMovieRevenue} và hai API \texttt{moviesRevenue}, \texttt{revenueDetail} mà không cần thao tác trên SSMS.
+
+\cach Về bố cục, trang được chia thành hai khu vực chính:
+
+\begin{itemize}
+\item \textbf{Thanh tổng quan doanh thu (Summary Bar):} Nằm ngay phía trên đầu trang, hiển thị \emph{Tổng doanh thu của toàn bộ phim} được tính từ dữ liệu trả về của API \texttt{moviesRevenue}.
+Khi danh sách phim thay đổi, giá trị tổng cũng được cập nhật lại tương ứng, giúp người quản trị có cái nhìn nhanh về tình hình doanh thu chung của toàn hệ thống.
+
+\item \textbf{Bảng danh sách phim (Movie Revenue Table):} Khu vực trung tâm của màn hình là một bảng dữ liệu hiển thị từng bộ phim, bao gồm các cột cơ bản như:
+      \begin{itemize}
+	      \item \texttt{Movie\_ID}: mã phim.
+	      \item \texttt{Title}: tên phim.
+	      \item \texttt{TotalRevenue}: doanh thu tổng của phim (đã được Backend bóc tách từ chuỗi trả về của \texttt{fn\_GetMovieRevenue} và chuyển sang dạng số để frontend định dạng \texttt{VND}).
+      \end{itemize}
+      Bảng được đặt trong một khung cuộn (\emph{scrollable container}) để có thể hiển thị danh sách dài mà không phá vỡ bố cục trang. Các hàng được tô màu khi rê chuột, giúp người dùng dễ nhận biết dòng đang thao tác. Tên phim được hiển thị dạng \texttt{button/link}; khi người dùng bấm vào, ứng dụng gửi yêu cầu tới API \texttt{/api/movies/:id/revenue-detail} và nạp dữ liệu chi tiết xuống khu vực bên dưới.
+
+\end{itemize}
+
+\cach Khu vực thứ hai trên trang là \textbf{panel hiển thị chi tiết doanh thu phim}. Mặc định, khi chưa chọn phim nào, panel chỉ hiển thị một dòng hướng dẫn ngắn gọn. Sau khi người dùng bấm vào tên một bộ phim trong bảng, UI sẽ:
+
+\begin{itemize}
+\item Ghi nhận \texttt{MovieID} và \texttt{Title} đang được chọn, hiển thị phía trên panel theo dạng: \textit{“Phim được chọn: [Tên phim] ([MovieID])”}.
+\item Hiển thị trạng thái tải dữ liệu (\textit{“Đang tải chi tiết doanh thu...”}) trong khi chờ API trả về.
+\item Sau khi nhận phản hồi từ Backend, phần thân panel hiển thị nội dung ở dạng \texttt{<pre>} để giữ nguyên format dòng, xuống hàng và căn lề giống kết quả chạy hàm \texttt{fn\_GetMovieRevenue} trong SSMS (bao gồm tiêu đề phim, từng suất chiếu, tổng doanh thu và tổng số suất chiếu).
+\end{itemize}
+
+\cach Giao diện cũng xử lý rõ ràng các trường hợp lỗi nghiệp vụ từ hàm SQL:
+
+\begin{itemize}
+\item Nếu API trả về chuỗi bắt đầu bằng \texttt{"Loi:"} hoặc \texttt{"Lop:"} (ví dụ: \texttt{"Loi: Khong tim thay phim voi ID: MV999"} hoặc \texttt{"Lop: MovieID khong duoc NULL"}), frontend vẫn hiển thị nguyên văn nội dung trong panel chi tiết nhưng dùng màu chữ cảnh báo để người dùng dễ nhận biết đó là thông báo lỗi từ hệ thống.
+\item Nếu lỗi xảy ra ở tầng API (ví dụ mất kết nối, lỗi máy chủ), một thông báo lỗi riêng (\texttt{toast}/\texttt{alert}) sẽ xuất hiện phía trên bảng dữ liệu, đồng thời panel chi tiết giữ nguyên dữ liệu lần xem gần nhất để tránh gây khó chịu cho người thao tác.
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Images/fe6.png}
+	\includegraphics[width=0.9\textwidth]{Images/fe7.png}
+	\caption{Giao diện Thống kê doanh thu phim}
+\end{figure}
 
 \end{document}
