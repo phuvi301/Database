@@ -2028,7 +2028,7 @@ BEGIN
     DECLARE @ShowtimeCount INT = 0;
 
     IF @MovieID IS NULL
-        RETURN N'Lop: MovieID khong duoc NULL';
+        RETURN N'Loi: MovieID khong duoc NULL';
 
     SELECT @MovieTitle = Title FROM MOVIE WHERE Movie_ID = @MovieID;
     IF @MovieTitle IS NULL
@@ -2054,7 +2054,7 @@ BEGIN
         SELECT @Revenue = ISNULL(SUM(B.TotalPrice), 0)
         FROM BOOKING B
         JOIN INCLUDE_SEAT I ON B.Booking_ID = I.Booking_ID
-        WHERE I.Showtime_ID = @ShowtimeID;
+        WHERE I.Showtime_ID = @ShowtimeID AND I.SeatStatus = 'Sold';
 
         SET @TotalRevenue = @TotalRevenue + @Revenue;
         SET @ShowtimeCount = @ShowtimeCount + 1;
@@ -2071,7 +2071,7 @@ BEGIN
     DEALLOCATE showtime_cursor;
 
     SET @Result = @Result + 
-        N'---' + CHAR(13) + CHAR(10) +
+        CHAR(13) + CHAR(10) +
         N'Tong doanh thu: ' + FORMAT(@TotalRevenue, 'N0') + N' VND' + CHAR(13) + CHAR(10) +
         N'Tong so suat chieu: ' + CAST(@ShowtimeCount AS NVARCHAR);
 
@@ -2149,7 +2149,7 @@ BEGIN
     DECLARE @ShowtimeID VARCHAR(10);
     DECLARE @BookedSeats INT;
     
-    IF @RoomID IS NULL OR LTRIM(RTRIM(@RoomID)) = ''
+    IF @RoomID IS NULL
         RETURN -1; 
     
     IF @StartDate IS NULL OR @EndDate IS NULL
@@ -2160,8 +2160,7 @@ BEGIN
     
     IF NOT EXISTS (SELECT 1 FROM ROOM WHERE Room_ID = @RoomID)
         RETURN -4; 
-
-    
+        
     SELECT @TotalSeats = Capacity 
     FROM ROOM 
     WHERE Room_ID = @RoomID;
@@ -2186,7 +2185,7 @@ BEGIN
         SELECT @BookedSeats = COUNT(*)
         FROM INCLUDE_SEAT
         WHERE Showtime_ID = @ShowtimeID
-            AND SeatStatus IN ('Booked', 'Sold');
+            AND SeatStatus = 'Sold';
         
         SET @TotalBookedSeats = @TotalBookedSeats + @BookedSeats;
         
