@@ -1934,7 +1934,7 @@ BEGIN
     LEFT JOIN 
         PAYMENT P ON B.PaymentID = P.Payment_ID 
     WHERE
-        (@Keyword IS NULL OR U.Email LIKE '%' + @Keyword + '%' OR U.FirstName LIKE '%' + @Keyword + '%')
+        (@Keyword IS NULL OR ISNULL(U.FirstName, '') + ' ' + ISNULL(U.LastName, '') LIKE '%' + @Keyword + '%')
     GROUP BY
         U.UserID, U.FirstName, U.LastName, U.Email, U.Phone
     HAVING 
