@@ -2028,7 +2028,7 @@ BEGIN
     DECLARE @ShowtimeCount INT = 0;
 
     IF @MovieID IS NULL
-        RETURN N'Lop: MovieID khong duoc NULL';
+        RETURN N'Loi: MovieID khong duoc NULL';
 
     SELECT @MovieTitle = Title FROM MOVIE WHERE Movie_ID = @MovieID;
     IF @MovieTitle IS NULL
@@ -2054,14 +2054,14 @@ BEGIN
         SELECT @Revenue = ISNULL(SUM(B.TotalPrice), 0)
         FROM BOOKING B
         JOIN INCLUDE_SEAT I ON B.Booking_ID = I.Booking_ID
-        WHERE I.Showtime_ID = @ShowtimeID;
+        WHERE I.Showtime_ID = @ShowtimeID AND I.SeatStatus = 'Sold';
 
         SET @TotalRevenue = @TotalRevenue + @Revenue;
         SET @ShowtimeCount = @ShowtimeCount + 1;
 
         SET @Result = @Result + 
             N'  Suat ' + CAST(@ShowtimeCount AS NVARCHAR) + 
-            N' (' + CONVERT(NVARCHAR, @StartTime, 103) + N'): ' + 
+            N' (' + FORMAT(@StartTime, 'dd/MM/yyyy HH:mm:ss') + N'): ' + 
             FORMAT(@Revenue, 'N0') + N' VND' + CHAR(13) + CHAR(10);
 
         FETCH NEXT FROM showtime_cursor INTO @ShowtimeID, @StartTime;
@@ -2071,7 +2071,7 @@ BEGIN
     DEALLOCATE showtime_cursor;
 
     SET @Result = @Result + 
-        N'---' + CHAR(13) + CHAR(10) +
+        CHAR(13) + CHAR(10) +
         N'Tong doanh thu: ' + FORMAT(@TotalRevenue, 'N0') + N' VND' + CHAR(13) + CHAR(10) +
         N'Tong so suat chieu: ' + CAST(@ShowtimeCount AS NVARCHAR);
 
@@ -2121,18 +2121,18 @@ SELECT dbo.fn_GetMovieRevenue(NULL) AS MovieRevenueDetail;
 \end{figure}
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\textwidth]{Images/H1_Test1_2.png}
+	\includegraphics[width=0.8\textwidth]{Images/H1_Test1_2.png}
 	\caption{Kết quả Test 2}
 \end{figure}
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\textwidth]{Images/H1_Test1_3.png}
+	\includegraphics[width=0.8\textwidth]{Images/H1_Test1_3.png}
 	\caption{Kết quả Test 3}
 \end{figure}
 
 \subsubsection{Hàm \texttt{fn\_GetRoomOccupancyRate}}
 \begin{lstlisting}
-    CREATE OR ALTER FUNCTION fn_GetRoomOccupancyRate
+CREATE OR ALTER FUNCTION fn_GetRoomOccupancyRate
 (
     @RoomID VARCHAR(10),
     @StartDate DATETIME,
@@ -2149,34 +2149,24 @@ BEGIN
     DECLARE @ShowtimeID VARCHAR(10);
     DECLARE @BookedSeats INT;
     
-    IF @RoomID IS NULL OR LTRIM(RTRIM(@RoomID)) = ''
-    BEGIN
+    IF @RoomID IS NULL
         RETURN -1; 
-    END
     
     IF @StartDate IS NULL OR @EndDate IS NULL
-    BEGIN
         RETURN -2; 
-    END
     
     IF @StartDate > @EndDate
-    BEGIN
         RETURN -3; 
-    END
     
     IF NOT EXISTS (SELECT 1 FROM ROOM WHERE Room_ID = @RoomID)
-    BEGIN
         RETURN -4; 
-    END
-    
+        
     SELECT @TotalSeats = Capacity 
     FROM ROOM 
     WHERE Room_ID = @RoomID;
     
     IF @TotalSeats = 0
-    BEGIN
         RETURN 0; 
-    END
     
     DECLARE showtime_cursor CURSOR FOR
     SELECT Showtime_ID
@@ -2195,7 +2185,7 @@ BEGIN
         SELECT @BookedSeats = COUNT(*)
         FROM INCLUDE_SEAT
         WHERE Showtime_ID = @ShowtimeID
-            AND SeatStatus IN ('Booked', 'Sold');
+            AND SeatStatus = 'Sold';
         
         SET @TotalBookedSeats = @TotalBookedSeats + @BookedSeats;
         
@@ -2206,14 +2196,10 @@ BEGIN
     DEALLOCATE showtime_cursor;
     
     IF @TotalShowtimes > 0
-    BEGIN
         SET @OccupancyRate = (CAST(@TotalBookedSeats AS DECIMAL(18, 2)) / 
                               (CAST(@TotalSeats AS DECIMAL(18, 2)) * @TotalShowtimes)) * 100;
-    END
     ELSE
-    BEGIN
         SET @OccupancyRate = 0;
-    END
     
     RETURN @OccupancyRate;
 END;
@@ -2402,7 +2388,7 @@ export const deleteUser = async (req, res) => {
 
 \textbf{2. Frontend (Giao diện và Logic)}
 
-Giao diện \texttt{/users} được thiết kế để đáp ứng các yêu cầu:
+Giao diện \texttt{/admin/users} được thiết kế để đáp ứng các yêu cầu:
 \begin{itemize}
 	\item \textbf{Danh sách dữ liệu:} Hiển thị bảng User với đầy đủ thông tin.
 	\item \textbf{Thêm/Sửa trên cùng giao diện:} Form tự động chuyển đổi trạng thái. Khi sửa, các trường không được phép thay đổi (như UserID, Tên) sẽ bị khóa hoặc ẩn đi, tuân thủ logic của \texttt{sp\_UpdateUser}.
@@ -2419,7 +2405,7 @@ Giao diện \texttt{/users} được thiết kế để đáp ứng các yêu c�
 
 \subsubsection{Thống kê và Quản lý Khách hàng (User Statistics \& Management)}
 
-\cach Chức năng này minh họa cho yêu cầu Tìm kiếm snâng cao và Thống kê tổng hợp.
+\cach Chức năng này minh họa cho yêu cầu Tìm kiếm nâng cao và Thống kê tổng hợp.
 Hệ thống cho phép lọc người dùng dựa trên tên và ố lượng đơn hàng đã đặt, đồng thời tính toán tổng chi tiêu (sử dụng kết hợp \texttt{COUNT}, \texttt{SUM} và \texttt{HAVING}).
 
 \textbf{1. Backend API (Controller)}
@@ -2469,6 +2455,83 @@ Giao diện \texttt{/admin/customer-filter} được thiết kế tập trung tr
 	\includegraphics[width=0.9\textwidth]{Images/fe4.jpg}
 	\includegraphics[width=0.9\textwidth]{Images/fe5.jpg}
 	\caption{Giao diện Thống kê và Quản lý Khách hàng}
+\end{figure}
+
+\subsubsection{Thống kê doanh thu phim (Movie's revenue statistics)}
+
+\textbf{1. Backend API (Controller)}
+
+File \texttt{revenueController.js} là module chịu trách nhiệm xử lý các yêu cầu liên quan đến doanh thu phim, bao gồm:
+\begin{itemize}
+    \item Hàm \texttt{revenueDetail}: Lấy chi tiết doanh thu của một phim theo ID, dưới dạng chuỗi mô tả đầy đủ được trả về từ hàm SQL \texttt{fn\_GetMovieRevenue}.
+    \item Hàm \texttt{moviesRevenue}: Lấy doanh thu của toàn bộ phim và chuyển đổi sang dạng JSON chuẩn cho frontend.
+\end{itemize}
+
+\begin{lstlisting}[language=JavaScript]
+const RevenueController = {
+    revenueDetail: async (req, res) => {
+        try {
+            const movieId = req.params.id;
+            const request = new sql.Request();
+            const result = await request.input("MovieID", sql.VarChar(10), movieId).query(`SELECT dbo.fn_GetMovieRevenue(@MovieID) AS Revenue`);
+            res.status(200).json({ detail: result.recordset[0].Revenue });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+
+    moviesRevenue: async (req, res) => {
+        try {
+            const request = new sql.Request();
+            const result = await request.query(`SELECT 
+                M.Movie_ID AS id,
+                dbo.fn_GetMovieRevenue(M.Movie_ID) AS revenueDetail
+            FROM MOVIE M
+            ORDER BY M.Movie_ID;
+            `)
+            res.status(200).json({ data: result.recordset.map(parseRevenueDetail) }); // ham parseRevenueDetail chuyen chuoi tra ve tu fn_GetMovieRevenue thanh JSON cho fe
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+};
+\end{lstlisting}
+
+\textbf{2. Frontend (Giao diện và Logic)}
+
+Giao diện \texttt{/admin/revenue} được thiết kế theo phong cách tương tự hai màn hình quản lý người dùng, nhưng tập trung hoàn toàn vào việc trực quan hóa doanh thu phim.
+Màn hình này giúp quản trị viên kiểm tra trực tiếp kết quả hàm \texttt{fn\_GetMovieRevenue}.
+
+\cach Về bố cục, trang được chia thành hai khu vực chính:
+
+\begin{itemize}
+\item \textbf{Thanh tổng quan doanh thu (Summary Bar):} Nằm ngay phía trên đầu trang, hiển thị \emph{Tổng doanh thu của toàn bộ phim} được tính từ dữ liệu trả về của API \texttt{moviesRevenue}.
+Khi danh sách phim thay đổi, giá trị tổng cũng được cập nhật lại tương ứng, giúp người quản trị có cái nhìn nhanh về tình hình doanh thu chung của toàn hệ thống.
+
+\item \textbf{Bảng danh sách phim (Movie Revenue Table):} Khu vực trung tâm của màn hình là một bảng dữ liệu hiển thị từng bộ phim, bao gồm các cột cơ bản như:
+      \begin{itemize}
+	      \item \texttt{Movie\_ID}: mã phim.
+	      \item \texttt{Title}: tên phim.
+	      \item \texttt{TotalRevenue}: doanh thu tổng của phim (đã được Backend bóc tách từ chuỗi trả về của \texttt{fn\_GetMovieRevenue} và chuyển sang dạng số để frontend định dạng \texttt{VND}).
+      \end{itemize}
+      Bảng được đặt trong một khung cuộn để có thể hiển thị danh sách tất cả các phim. Khi người dùng bấm vào tên phim, hệ thống sẽ nạp dữ liệu chi tiết xuống khu vực bên dưới.
+
+\end{itemize}
+
+\cach Khu vực thứ hai trên trang là \textbf{panel hiển thị chi tiết doanh thu phim}. Mặc định, khi chưa chọn phim nào, panel chỉ hiển thị một dòng hướng dẫn ngắn gọn. Sau khi người dùng bấm vào tên một bộ phim trong bảng, UI sẽ:
+
+\begin{itemize}
+\item Ghi nhận \texttt{MovieID} và \texttt{Title} đang được chọn, hiển thị phía trên panel theo dạng: \textit{“Phim được chọn: [Tên phim] ([MovieID])”}.
+\item Sau khi nhận phản hồi từ Backend, phần thân panel hiển thị nội dung là kết quả chạy hàm \texttt{fn\_GetMovieRevenue} (bao gồm tiêu đề phim, từng suất chiếu, tổng doanh thu và tổng số suất chiếu).
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Images/fe6.png}
+	\includegraphics[width=0.9\textwidth]{Images/fe7.png}
+	\caption{Giao diện Thống kê doanh thu phim}
 \end{figure}
 
 \end{document}
